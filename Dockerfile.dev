@@ -1,0 +1,23 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copier package files
+COPY package*.json ./
+COPY yarn.lock ./
+
+# Installer dépendances
+RUN yarn install --frozen-lockfile
+
+# Copier code source
+COPY . .
+
+# Exposer port
+EXPOSE 3002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3002/api/v1/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Démarrer en mode développement
+CMD ["yarn", "start:dev"]
