@@ -1,11 +1,49 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from 'src/app.module';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from '../../src/modules/auth';
+import { UsersModule } from '../../src/modules/users';
+import { RolesModule } from '../../src/modules/roles';
+import { DashboardsModule } from '../../src/modules/dashboards';
+import { WidgetsModule } from '../../src/modules/widgets';
+import { DataSourcesModule } from '../../src/modules/datasources';
+import { AIConversationsModule } from '../../src/modules/ai-conversations';
+import { AppController } from '../../src/app.controller';
+import { AppService } from '../../src/app.service';
+
+let mongod: MongoMemoryServer;
 
 export async function createTestApp(): Promise<INestApplication> {
+  mongod = await MongoMemoryServer.create();
+  const mongoUri = mongod.getUri();
+
   const moduleFixture: TestingModule = await Test.createTestingModule({
-    imports: [AppModule],
+    imports: [
+      ConfigModule.forRoot({
+        isGlobal: true,
+        load: [
+          () => ({
+            MONGODB_URI: mongoUri,
+            JWT_SECRET: 'test-secret-key-for-e2e-tests',
+            JWT_EXPIRATION: 604800,
+          }),
+        ],
+      }),
+      MongooseModule.forRoot(mongoUri),
+      AuthModule,
+      UsersModule,
+      RolesModule,
+      DashboardsModule,
+      WidgetsModule,
+      DataSourcesModule,
+      AIConversationsModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
   }).compile();
 
   const app = moduleFixture.createNestApplication();
@@ -53,5 +91,8 @@ export async function createTestApp(): Promise<INestApplication> {
 export async function closeTestApp(app: INestApplication): Promise<void> {
   if (app) {
     await app.close();
+  }
+  if (mongod) {
+    await mongod.stop();
   }
 }
