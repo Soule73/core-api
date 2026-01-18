@@ -1,0 +1,1114 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "CustomDash Core API",
+    "description": "Postman collection for the CustomDash Core API (NestJS). Includes automatic JWT token management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3002/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "roleId",
+      "value": ""
+    },
+    {
+      "key": "dashboardId",
+      "value": ""
+    },
+    {
+      "key": "shareId",
+      "value": ""
+    },
+    {
+      "key": "widgetId",
+      "value": ""
+    },
+    {
+      "key": "dataSourceId",
+      "value": ""
+    },
+    {
+      "key": "conversationId",
+      "value": ""
+    },
+    {
+      "key": "permissionId",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    if (response.user) {",
+                  "        pm.collectionVariables.set('userId', response.user._id || response.user.id);",
+                  "    }",
+                  "    pm.test('Registration successful', function() {",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    if (response.user) {",
+                  "        pm.collectionVariables.set('userId', response.user._id || response.user.id);",
+                  "    }",
+                  "    pm.test('Login successful', function() {",
+                  "        pm.expect(response).to.have.property('token');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@customdash.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Profile retrieved', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('userId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newuser\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\",\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('userId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"updateduser\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Create Role",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('roleId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"editor\",\n  \"description\": \"Editor role\",\n  \"permissions\": [\"{{permissionId}}\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Roles",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('roleId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Permissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('permissionId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles/permissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "permissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Role by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "{{roleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated role\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "{{roleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/roles/{{roleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "{{roleId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "item": [
+        {
+          "name": "Create Dashboard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('dashboardId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Dashboard\",\n  \"visibility\": \"private\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dashboards",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Dashboards",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('dashboardId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboards",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dashboard by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboards/{{dashboardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards", "{{dashboardId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Shared Dashboard",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboards/shared/{{shareId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards", "shared", "{{shareId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Dashboard",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Dashboard\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/dashboards/{{dashboardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards", "{{dashboardId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Share",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.shareId) {",
+                  "        pm.collectionVariables.set('shareId', response.shareId);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboards/{{dashboardId}}/share",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards", "{{dashboardId}}", "share"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Dashboard",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboards/{{dashboardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboards", "{{dashboardId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "DataSources",
+      "item": [
+        {
+          "name": "Create JSON DataSource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('dataSourceId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sales API\",\n  \"type\": \"json\",\n  \"endpoint\": \"https://api.example.com/sales\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/datasources",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create CSV DataSource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('dataSourceId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sales CSV\",\n  \"type\": \"csv\",\n  \"filePath\": \"/uploads/sales.csv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/datasources",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create ES DataSource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('dataSourceId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Logs Index\",\n  \"type\": \"elasticsearch\",\n  \"endpoint\": \"http://localhost:9200\",\n  \"esIndex\": \"logs-*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/datasources",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All DataSources",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('dataSourceId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/datasources",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get DataSource by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/datasources/{{dataSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources", "{{dataSourceId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update DataSource",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Source\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/datasources/{{dataSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources", "{{dataSourceId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete DataSource",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/datasources/{{dataSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["datasources", "{{dataSourceId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Widgets",
+      "item": [
+        {
+          "name": "Create Bar Widget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('widgetId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Sales by Region\",\n  \"type\": \"bar\",\n  \"dataSourceId\": \"{{dataSourceId}}\",\n  \"config\": {\n    \"metrics\": [{\"field\": \"sales\", \"aggregation\": \"sum\"}],\n    \"buckets\": [{\"field\": \"region\", \"type\": \"terms\"}]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/widgets",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create KPI Widget",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('widgetId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Total Revenue\",\n  \"type\": \"kpi\",\n  \"dataSourceId\": \"{{dataSourceId}}\",\n  \"config\": {\n    \"metrics\": [{\"field\": \"revenue\", \"aggregation\": \"sum\"}]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/widgets",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Widgets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('widgetId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/widgets",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Widgets by DataSource",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/widgets?dataSourceId={{dataSourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets"],
+              "query": [
+                {
+                  "key": "dataSourceId",
+                  "value": "{{dataSourceId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Widget by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/widgets/{{widgetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets", "{{widgetId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Widget",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Widget\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/widgets/{{widgetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets", "{{widgetId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Widget",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/widgets/{{widgetId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["widgets", "{{widgetId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "AI Conversations",
+      "item": [
+        {
+          "name": "Create Conversation",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var response = pm.response.json();",
+                  "    pm.collectionVariables.set('conversationId', response._id || response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataSourceId\": \"{{dataSourceId}}\",\n  \"title\": \"Create a bar chart for sales\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Conversations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var response = pm.response.json();",
+                  "    if (response.length > 0) {",
+                  "        pm.collectionVariables.set('conversationId', response[0]._id || response[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations", "{{conversationId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"user\",\n  \"content\": \"Make the chart blue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations/{{conversationId}}/messages",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations", "{{conversationId}}", "messages"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Conversation",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated conversation title\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations", "{{conversationId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ai/conversations/{{conversationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["ai", "conversations", "{{conversationId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
