@@ -38,9 +38,12 @@ async function bootstrap() {
     )
     .addTag('Health', 'Health check endpoints')
     .addTag('Auth', 'Authentication and user management')
+    .addTag('Users', 'User management (admin)')
+    .addTag('Roles', 'Role and permissions management')
     .addTag('Dashboards', 'Dashboard management')
     .addTag('Widgets', 'Widget management')
     .addTag('Data Sources', 'Data source management')
+    .addTag('AI Conversations', 'AI conversation history management')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -53,8 +56,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
-  console.log(`🚀 Core API running on port ${port}`);
-  console.log(`📚 Environment: ${process.env.NODE_ENV}`);
-  console.log(`📖 Swagger documentation: http://localhost:${port}/api/docs`);
+  console.log(`Core API running on port ${port}`);
+  console.log(`Environment: ${process.env.NODE_ENV ?? 'development'}`);
+  console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
 }
-bootstrap();
+void bootstrap();
