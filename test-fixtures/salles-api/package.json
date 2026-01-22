@@ -1,0 +1,9 @@
+{
+  "name": "salles-api-mock",
+  "version": "1.0.0",
+  "description": "Mock API server for e2e testing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

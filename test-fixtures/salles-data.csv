@@ -1,0 +1,16 @@
+id,name,capacity,building,floor,hasProjector,hasVideoConference,pricePerHour,status,lastBooking,rating
+salle-001,Salle Einstein,50,A,1,true,true,75.00,available,2026-01-15T14:00:00Z,4.5
+salle-002,Salle Curie,30,A,2,true,false,50.00,occupied,2026-01-20T09:00:00Z,4.2
+salle-003,Salle Newton,100,B,0,true,true,120.00,available,2026-01-18T16:00:00Z,4.8
+salle-004,Salle Darwin,20,B,1,false,false,30.00,maintenance,2026-01-10T11:00:00Z,3.5
+salle-005,Salle Pasteur,40,A,3,true,true,65.00,available,2026-01-21T10:00:00Z,4.6
+salle-006,Salle Lavoisier,25,C,1,true,false,45.00,available,2026-01-19T13:00:00Z,4.0
+salle-007,Salle Tesla,80,B,2,true,true,100.00,occupied,2026-01-21T08:00:00Z,4.7
+salle-008,Salle Galileo,15,C,0,false,false,25.00,available,2026-01-14T15:00:00Z,3.8
+salle-009,Salle Planck,60,A,4,true,true,85.00,available,2026-01-20T14:00:00Z,4.4
+salle-010,Salle Fermi,35,C,2,true,true,55.00,occupied,2026-01-21T11:00:00Z,4.1
+salle-011,Salle Bohr,45,A,2,true,true,70.00,available,2026-01-19T09:00:00Z,4.3
+salle-012,Salle Heisenberg,55,B,3,true,false,80.00,available,2026-01-17T11:00:00Z,4.0
+salle-013,Salle Schrodinger,70,C,1,true,true,95.00,occupied,2026-01-21T15:00:00Z,4.6
+salle-014,Salle Faraday,28,A,1,true,false,48.00,maintenance,2026-01-12T10:00:00Z,3.9
+salle-015,Salle Maxwell,90,B,0,true,true,110.00,available,2026-01-20T16:00:00Z,4.9
