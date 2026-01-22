@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/Soule73/core-api/compare/v1.0.0...v1.1.0) (2026-01-22)
+
+
+### Features
+
+* **config:** add Redis configuration and register ProcessingModule ([9c5c7f5](https://github.com/Soule73/core-api/commit/9c5c7f5b6fa20479f8fc0376b313f268052337dd))
+* **e2e:** add test fixtures for processing module e2e tests ([8102647](https://github.com/Soule73/core-api/commit/8102647f8cbe1175bdfb2fa5e556c730950d4f49))
+* **processing:** add aggregation engine with 5 aggregation types ([9aa0e1f](https://github.com/Soule73/core-api/commit/9aa0e1fcb346b71ae7c74d9e805d5310fd48dcd3))
+* **processing:** add data connectors for JSON, CSV and Elasticsearch ([13dcd21](https://github.com/Soule73/core-api/commit/13dcd214fa664c2235182b934d26eb84b51327a1))
+* **processing:** add filter engine with 14 operators ([25d6ec9](https://github.com/Soule73/core-api/commit/25d6ec95e62f27032c24c61ed5ad38817be3f6ec))
+* **processing:** add group-by transformer for data bucketing ([5e6dfc8](https://github.com/Soule73/core-api/commit/5e6dfc8e577ea993573ddd137ce547c9914308d1))
+* **processing:** add Processing module with controller and services ([03924b8](https://github.com/Soule73/core-api/commit/03924b86ef318fcf60a8c1c62affc925499c4afd))
+* **processing:** add schema analyzer for data source introspection ([b0bc96b](https://github.com/Soule73/core-api/commit/b0bc96b5c41cab40d635f07906ca283d1f8a6e03))
+
+
+### Bug Fixes
+
+* **ai-conversations:** remove redundant userId from CreateAIConversationDto ([7faf01d](https://github.com/Soule73/core-api/commit/7faf01dc951c0493bf1e4021fd26d153830e0603))
+
+
+### Code Refactoring
+
+* **tests:** migrate test folder structure to e2e/ ([2b2824d](https://github.com/Soule73/core-api/commit/2b2824d97aab125aa6793b68af10cffc9697516f))
+
+
+### Build System
+
+* **docker:** update Dockerfiles for E2E test environment ([6dccec9](https://github.com/Soule73/core-api/commit/6dccec99cfd1702e788c3180eab437b21572c3c7))
+
+
+### Documentation
+
+* add CONTRIBUTING.md with guidelines ([293f93a](https://github.com/Soule73/core-api/commit/293f93a9295966606ab00d6d4adfc5095482a2e0))
+* **postman:** update collection with Processing module endpoints ([b31c167](https://github.com/Soule73/core-api/commit/b31c167564ede0dac0909ad1f19d52ff37ff082b))
+* simplify README with essential information ([0847c9e](https://github.com/Soule73/core-api/commit/0847c9ef425a85b09f8a6605362d77936f904d56))
+* update README and add E2E testing documentation ([7a795fd](https://github.com/Soule73/core-api/commit/7a795fdf1ea7b4bc9beb1e82821d918760e593c3))
+
 ## 1.0.0 (2026-01-18)
 
 ### Features
