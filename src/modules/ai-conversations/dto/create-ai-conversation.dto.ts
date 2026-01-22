@@ -28,13 +28,6 @@ class AIMessageDto {
 
 export class CreateAIConversationDto {
   @ApiProperty({
-    description: 'ID of the user creating the conversation',
-    example: '64b64c4f2f9b2567e4d3c123',
-  })
-  @IsMongoId()
-  userId!: string;
-
-  @ApiProperty({
     description: 'ID of the data source associated with the conversation',
     example: '64b64c4f2f9b2567e4d3c456',
   })
