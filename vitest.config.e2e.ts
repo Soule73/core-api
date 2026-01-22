@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { defineConfig } from 'vitest/config';
 import swc from 'unplugin-swc';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -13,16 +14,21 @@ export default defineConfig({
         globals: true,
         environment: 'node',
         root: './',
-        include: ['test/**/*.e2e-spec.ts'],
+        include: ['e2e/**/*.e2e-spec.ts'],
+        setupFiles: ['./e2e/setup.ts'],
         testTimeout: 30000,
-        hookTimeout: 30000,
-        teardownTimeout: 10000,
+        hookTimeout: 60000,
+        teardownTimeout: 15000,
+        fileParallelism: false,
+        sequence: {
+            shuffle: false,
+        },
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
             exclude: [
                 'node_modules/',
-                'test/',
+                'e2e/',
                 'dist/',
                 '**/*.spec.ts',
             ],
