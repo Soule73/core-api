@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3002/api/v1"
+      "value": "http://localhost:3000/api/v1"
     },
     {
       "key": "token",
@@ -1104,6 +1104,169 @@
               "raw": "{{baseUrl}}/ai/conversations/{{conversationId}}",
               "host": ["{{baseUrl}}"],
               "path": ["ai", "conversations", "{{conversationId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Processing",
+      "item": [
+        {
+          "name": "Fetch Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/processing/datasources/{{dataSourceId}}/data?limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["processing", "datasources", "{{dataSourceId}}", "data"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Aggregate Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"metrics\": [{\"field\": \"capacity\", \"type\": \"sum\"}],\n  \"buckets\": [{\"field\": \"building\"}]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/processing/datasources/{{dataSourceId}}/aggregate",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "processing",
+                "datasources",
+                "{{dataSourceId}}",
+                "aggregate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detect Columns (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"json\",\n  \"endpoint\": \"https://api.example.com/data\",\n  \"httpMethod\": \"GET\",\n  \"authType\": \"none\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/processing/detect-columns",
+              "host": ["{{baseUrl}}"],
+              "path": ["processing", "detect-columns"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detect Columns (CSV)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"csv\",\n  \"filePath\": \"/uploads/data.csv\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/processing/detect-columns",
+              "host": ["{{baseUrl}}"],
+              "path": ["processing", "detect-columns"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Detect Columns (Elasticsearch)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"elasticsearch\",\n  \"endpoint\": \"http://localhost:9200\",\n  \"esIndex\": \"logs-*\",\n  \"authType\": \"none\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/processing/detect-columns",
+              "host": ["{{baseUrl}}"],
+              "path": ["processing", "detect-columns"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Schema",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/processing/datasources/{{dataSourceId}}/schema?sampleSize=100&detectDates=true",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "processing",
+                "datasources",
+                "{{dataSourceId}}",
+                "schema"
+              ],
+              "query": [
+                {
+                  "key": "sampleSize",
+                  "value": "100"
+                },
+                {
+                  "key": "detectDates",
+                  "value": "true"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Quick Schema Analysis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/processing/datasources/{{dataSourceId}}/quick-schema",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "processing",
+                "datasources",
+                "{{dataSourceId}}",
+                "quick-schema"
+              ]
             }
           },
           "response": []
