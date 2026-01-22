@@ -11,6 +11,7 @@ import { DashboardsModule } from './modules/dashboards';
 import { WidgetsModule } from './modules/widgets';
 import { DataSourcesModule } from './modules/datasources';
 import { AIConversationsModule } from './modules/ai-conversations';
+import { ProcessingModule } from './modules/processing';
 
 @Module({
   imports: [
@@ -32,8 +33,11 @@ import { AIConversationsModule } from './modules/ai-conversations';
     WidgetsModule,
     DataSourcesModule,
     AIConversationsModule,
+    ProcessingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  /** */
+}
