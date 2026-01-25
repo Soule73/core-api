@@ -12,6 +12,6 @@ export interface DataSourceResponse {
   httpMethod: string;
   authType: string;
   esIndex?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }

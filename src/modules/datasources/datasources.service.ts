@@ -104,6 +104,8 @@ export class DataSourcesService {
       httpMethod: dataSource.httpMethod,
       authType: dataSource.authType,
       esIndex: dataSource.esIndex,
+      createdAt: dataSource.createdAt?.toISOString(),
+      updatedAt: dataSource.updatedAt?.toISOString(),
     };
   }
 }

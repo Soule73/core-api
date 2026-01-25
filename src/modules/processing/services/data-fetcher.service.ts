@@ -199,8 +199,9 @@ export class DataFetcherService {
 
     const isISODateTime = (val: unknown): boolean =>
       typeof val === 'string' &&
-      (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?$/.test(val) ||
-        (!isISODate(val) && !isNaN(Date.parse(val))));
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/.test(
+        val,
+      );
 
     const isBooleanString = (val: unknown): boolean =>
       val === 'true' || val === 'false';
