@@ -1,13 +1,15 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+    origin: configService.get<string[]>('app.corsOrigins'),
     credentials: true,
   });
 
@@ -53,11 +55,13 @@ async function bootstrap() {
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
-  const port = process.env.PORT || 3000;
+  const port = configService.get<number>('app.port') || 3000;
+  const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
+
   await app.listen(port);
 
   console.log(`Core API running on port ${port}`);
-  console.log(`Environment: ${process.env.NODE_ENV ?? 'development'}`);
+  console.log(`Environment: ${nodeEnv}`);
   console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
 }
 void bootstrap();
