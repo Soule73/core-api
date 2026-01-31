@@ -1,16 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { Widget, WidgetDocument } from './schemas/widget.schema';
 import { CreateWidgetDto, UpdateWidgetDto } from './dto';
 import { WidgetResponse } from './interfaces';
+import { DashboardsService } from '../dashboards/dashboards.service';
 
 @Injectable()
 export class WidgetsService {
   constructor(
     @InjectModel(Widget.name) private widgetModel: Model<WidgetDocument>,
-  ) {}
+    @Inject(forwardRef(() => DashboardsService))
+    private readonly dashboardsService: DashboardsService,
+  ) {
+    /** */
+  }
 
   async create(
     userId: string,
@@ -129,6 +140,21 @@ export class WidgetsService {
 
     if (widget.ownerId.toString() !== userId) {
       throw new NotFoundException('Widget not found');
+    }
+
+    // Check if widget is used in dashboards
+    // Use widget._id (not widget.widgetId) because layout.widgetId stores ObjectId references
+    const dashboardsUsing =
+      await this.dashboardsService.findDashboardsUsingWidget(
+        widget._id.toString(),
+        userId,
+      );
+
+    if (dashboardsUsing.length > 0) {
+      const dashboardTitles = dashboardsUsing.map((d) => d.title).join(', ');
+      throw new BadRequestException(
+        `Cannot delete widget. It is used in ${dashboardsUsing.length} dashboard(s): ${dashboardTitles}`,
+      );
     }
 
     await this.widgetModel.findByIdAndDelete(widget._id);

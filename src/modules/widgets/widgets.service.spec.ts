@@ -4,6 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { WidgetsService } from './widgets.service';
 import { Widget } from './schemas/widget.schema';
+import { DashboardsService } from '../dashboards/dashboards.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -34,6 +35,10 @@ const mockWidgetModel = {
   create: vi.fn(),
 };
 
+const mockDashboardsService = {
+  findDashboardsUsingWidget: vi.fn(),
+};
+
 describe('WidgetsService', () => {
   let service: WidgetsService;
 
@@ -44,6 +49,10 @@ describe('WidgetsService', () => {
       providers: [
         WidgetsService,
         { provide: getModelToken(Widget.name), useValue: mockWidgetModel },
+        {
+          provide: DashboardsService,
+          useValue: mockDashboardsService,
+        },
       ],
     }).compile();
 
@@ -168,13 +177,32 @@ describe('WidgetsService', () => {
   });
 
   describe('remove', () => {
-    it('should delete a widget successfully', async () => {
+    it('should delete a widget successfully when not used', async () => {
       mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockDashboardsService.findDashboardsUsingWidget.mockResolvedValue([]);
       mockWidgetModel.findByIdAndDelete.mockResolvedValue(mockWidget);
 
       await expect(
         service.remove(mockWidgetId, mockUserId),
       ).resolves.not.toThrow();
+
+      expect(
+        mockDashboardsService.findDashboardsUsingWidget,
+      ).toHaveBeenCalledWith(mockWidgetUuid, mockUserId);
+    });
+
+    it('should throw BadRequestException if widget is used in dashboards', async () => {
+      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockDashboardsService.findDashboardsUsingWidget.mockResolvedValue([
+        { _id: '1', title: 'Dashboard 1' },
+        { _id: '2', title: 'Dashboard 2' },
+      ]);
+
+      await expect(service.remove(mockWidgetId, mockUserId)).rejects.toThrow(
+        'Cannot delete widget',
+      );
+
+      expect(mockWidgetModel.findByIdAndDelete).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if widget not found', async () => {
