@@ -1,16 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { DataSource, DataSourceDocument } from './schemas/datasource.schema';
 import { CreateDataSourceDto, UpdateDataSourceDto } from './dto';
 import { DataSourceResponse } from './interfaces';
+import { WidgetsService } from '../widgets/widgets.service';
 
 @Injectable()
 export class DataSourcesService {
   constructor(
     @InjectModel(DataSource.name)
     private dataSourceModel: Model<DataSourceDocument>,
-  ) {}
+    private readonly widgetsService: WidgetsService,
+  ) {
+    /** */
+  }
 
   async create(
     userId: string,
@@ -82,6 +90,16 @@ export class DataSourcesService {
 
     if (dataSource.ownerId.toString() !== userId) {
       throw new NotFoundException('DataSource not found');
+    }
+
+    // Vérifier si des widgets utilisent cette source
+    const widgetsUsing = await this.widgetsService.findByDataSource(id, userId);
+
+    if (widgetsUsing.length > 0) {
+      const widgetTitles = widgetsUsing.map((w) => w.title).join(', ');
+      throw new BadRequestException(
+        `Cannot delete data source. It is used by ${widgetsUsing.length} widget(s): ${widgetTitles}`,
+      );
     }
 
     await this.dataSourceModel.findByIdAndDelete(id);

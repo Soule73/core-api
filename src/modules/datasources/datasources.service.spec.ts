@@ -4,6 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { DataSourcesService } from './datasources.service';
 import { DataSource } from './schemas/datasource.schema';
+import { WidgetsService } from '../widgets/widgets.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -29,6 +30,10 @@ const mockDataSourceModel = {
   create: vi.fn(),
 };
 
+const mockWidgetsService = {
+  findByDataSource: vi.fn(),
+};
+
 describe('DataSourcesService', () => {
   let service: DataSourcesService;
 
@@ -41,6 +46,10 @@ describe('DataSourcesService', () => {
         {
           provide: getModelToken(DataSource.name),
           useValue: mockDataSourceModel,
+        },
+        {
+          provide: WidgetsService,
+          useValue: mockWidgetsService,
         },
       ],
     }).compile();
@@ -178,13 +187,33 @@ describe('DataSourcesService', () => {
   });
 
   describe('remove', () => {
-    it('should delete a data source successfully', async () => {
+    it('should delete a data source successfully when not used', async () => {
       mockDataSourceModel.findById.mockResolvedValue(mockDataSource);
+      mockWidgetsService.findByDataSource.mockResolvedValue([]);
       mockDataSourceModel.findByIdAndDelete.mockResolvedValue(mockDataSource);
 
       await expect(
         service.remove(mockDataSourceId, mockUserId),
       ).resolves.not.toThrow();
+
+      expect(mockWidgetsService.findByDataSource).toHaveBeenCalledWith(
+        mockDataSourceId,
+        mockUserId,
+      );
+    });
+
+    it('should throw BadRequestException if datasource is used by widgets', async () => {
+      mockDataSourceModel.findById.mockResolvedValue(mockDataSource);
+      mockWidgetsService.findByDataSource.mockResolvedValue([
+        { _id: '1', title: 'Widget 1' },
+        { _id: '2', title: 'Widget 2' },
+      ]);
+
+      await expect(
+        service.remove(mockDataSourceId, mockUserId),
+      ).rejects.toThrow('Cannot delete data source');
+
+      expect(mockDataSourceModel.findByIdAndDelete).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if data source not found', async () => {

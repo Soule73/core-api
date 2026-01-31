@@ -5,6 +5,7 @@ import { DataSourcesService } from './datasources.service';
 import { DataSource, DataSourceSchema } from './schemas/datasource.schema';
 import { AuthModule } from '../auth/auth.module';
 import { User, UserSchema } from '../auth/schemas/user.schema';
+import { WidgetsModule } from '../widgets/widgets.module';
 
 @Module({
   imports: [
@@ -13,9 +14,12 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: User.name, schema: UserSchema },
     ]),
     AuthModule,
+    WidgetsModule,
   ],
   controllers: [DataSourcesController],
   providers: [DataSourcesService],
   exports: [DataSourcesService],
 })
-export class DataSourcesModule {}
+export class DataSourcesModule {
+  /** */
+}
