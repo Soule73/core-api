@@ -219,6 +219,50 @@ describe('DataSources Module (E2E)', () => {
   });
 
   describe('DELETE /api/v1/datasources/:id', () => {
+    it('should prevent deletion of datasource used by widgets', async () => {
+      const dsResponse = await test.createDataSource({
+        name: 'Datasource for Widget Protection Test',
+        type: 'json',
+        endpoint: 'https://api.test.com/protected-ds',
+      });
+      const dsId = (dsResponse.body as DataSourceResponse)._id;
+
+      // Widget must be created by same user as datasource owner for deletion protection to work
+      const widgetResponse = await test.post(
+        '/api/v1/widgets',
+        {
+          title: 'Widget Using Datasource',
+          type: 'kpi',
+          dataSourceId: dsId,
+        },
+        { asAdmin: false },
+      );
+      const widgetId = (widgetResponse.body as { _id: string })._id;
+
+      const deleteResponse = await test.deleteDataSource(dsId);
+
+      expect(deleteResponse.status).toBe(400);
+      const errorBody = deleteResponse.body as { message: string };
+      expect(errorBody.message).toContain('Cannot delete data source');
+      expect(errorBody.message).toContain('Widget Using Datasource');
+
+      await test.delete(`/api/v1/widgets/${widgetId}`, { asAdmin: false });
+      await test.deleteDataSource(dsId);
+    });
+
+    it('should allow deletion of datasource not used by any widget', async () => {
+      const dsResponse = await test.createDataSource({
+        name: 'Datasource Without Widgets',
+        type: 'json',
+        endpoint: 'https://api.test.com/unused-ds',
+      });
+      const dsId = (dsResponse.body as DataSourceResponse)._id;
+
+      const deleteResponse = await test.deleteDataSource(dsId);
+
+      expect(deleteResponse.status).toBe(204);
+    });
+
     it('should fail to delete other user data source', async () => {
       const response = await test.deleteDataSource(test.getAdminDataSourceId());
 

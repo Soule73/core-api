@@ -294,6 +294,60 @@ describe('Widgets Module (E2E)', () => {
   });
 
   describe('DELETE /api/v1/widgets/:id', () => {
+    it('should prevent deletion of widget used in dashboard', async () => {
+      const widgetResponse = await test.createWidget({
+        title: 'Widget for Dashboard Protection Test',
+        type: 'kpi',
+        dataSourceId: test.getUserDataSourceId(),
+      });
+      const widgetId = (widgetResponse.body as WidgetResponse)._id;
+
+      // Dashboard must be created by same user as widget owner for deletion protection to work
+      const dashboardResponse = await test.post(
+        '/api/v1/dashboards',
+        {
+          title: 'Dashboard Using Widget',
+          layout: [
+            {
+              i: 'widget-1',
+              widgetId: widgetId,
+              x: 0,
+              y: 0,
+              w: 4,
+              h: 3,
+            },
+          ],
+        },
+        { asAdmin: false },
+      );
+      const dashboardId = (dashboardResponse.body as { _id: string })._id;
+
+      const deleteResponse = await test.deleteWidget(widgetId);
+
+      expect(deleteResponse.status).toBe(400);
+      const errorBody = deleteResponse.body as { message: string };
+      expect(errorBody.message).toContain('Cannot delete widget');
+      expect(errorBody.message).toContain('Dashboard Using Widget');
+
+      await test.delete(`/api/v1/dashboards/${dashboardId}`, {
+        asAdmin: false,
+      });
+      await test.deleteWidget(widgetId);
+    });
+
+    it('should allow deletion of widget not used in any dashboard', async () => {
+      const widgetResponse = await test.createWidget({
+        title: 'Widget Without Dashboard',
+        type: 'kpi',
+        dataSourceId: test.getUserDataSourceId(),
+      });
+      const widgetId = (widgetResponse.body as WidgetResponse)._id;
+
+      const deleteResponse = await test.deleteWidget(widgetId);
+
+      expect(deleteResponse.status).toBe(204);
+    });
+
     it('should fail to delete other user widget', async () => {
       const response = await test.deleteWidget(test.getAdminWidgetId());
 

@@ -1,7 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { getModelToken } from '@nestjs/mongoose';
+import type { Model } from 'mongoose';
 import request from 'supertest';
 import { BaseE2ETest } from '@e2e/base';
 import { DashboardResponse } from '@core/modules/dashboards/interfaces';
+
+interface DataSourceDoc {
+  _id: string;
+  name: string;
+  type: string;
+  endpoint?: string;
+  ownerId: string;
+  visibility?: string;
+}
+
 export interface LayoutItem {
   i: string;
   widgetId: string;
@@ -10,10 +22,12 @@ export interface LayoutItem {
   w: number;
   h: number;
 }
+
 interface CreateDashboardPayload {
   title: string;
   visibility?: 'private' | 'public';
   layout?: LayoutItem[];
+  skipValidation?: boolean;
 }
 
 /**
@@ -24,6 +38,25 @@ class DashboardsE2ETest extends BaseE2ETest {
   private readonly basePath = '/api/v1/dashboards';
   private createdDashboardId = '';
   private shareId = '';
+  private userDataSourceId = '';
+
+  getDataSourceModel(): Model<DataSourceDoc> {
+    return this.context.app.get<Model<DataSourceDoc>>(
+      getModelToken('DataSource'),
+    );
+  }
+
+  getUserId(): string {
+    return this.testData.regularUser._id.toString();
+  }
+
+  setUserDataSourceId(id: string): void {
+    this.userDataSourceId = id;
+  }
+
+  getUserDataSourceId(): string {
+    return this.userDataSourceId;
+  }
 
   setCreatedDashboardId(id: string): void {
     this.createdDashboardId = id;
@@ -98,6 +131,20 @@ class DashboardsE2ETest extends BaseE2ETest {
 const test = new DashboardsE2ETest();
 
 describe('Dashboards Module (E2E)', () => {
+  beforeAll(async () => {
+    const DataSourceModel = test.getDataSourceModel();
+
+    const userDs = await DataSourceModel.create({
+      name: 'User Dashboard Source',
+      type: 'json',
+      endpoint: 'https://api.test.com/dashboard-user',
+      ownerId: test.getUserId(),
+      visibility: 'private',
+    });
+
+    test.setUserDataSourceId(String(userDs._id));
+  });
+
   describe('POST /api/v1/dashboards', () => {
     it('should create a dashboard as authenticated user', async () => {
       const response = await test.createDashboard({
@@ -114,10 +161,15 @@ describe('Dashboards Module (E2E)', () => {
     });
 
     it('should create dashboard with layout', async () => {
+      // Use a valid ObjectId format even with skipValidation (required for MongoDB ObjectId conversion)
+      const fakeWidgetId = '507f1f77bcf86cd799439011';
       const response = await test.createDashboard(
         {
           title: 'Dashboard with Layout',
-          layout: [{ i: 'widget-1', widgetId: 'w1', x: 0, y: 0, w: 4, h: 3 }],
+          layout: [
+            { i: 'widget-1', widgetId: fakeWidgetId, x: 0, y: 0, w: 4, h: 3 },
+          ],
+          skipValidation: true,
         },
         true,
       );
@@ -242,6 +294,99 @@ describe('Dashboards Module (E2E)', () => {
       const response = await test.getSharedDashboard('invalid-share-id');
 
       expect(response.status).toBe(404);
+    });
+  });
+
+  describe('Widget Validation', () => {
+    it('should reject dashboard creation with non-existent widget', async () => {
+      const response = await test.createDashboard({
+        title: 'Dashboard with Invalid Widget',
+        layout: [
+          {
+            i: 'invalid-1',
+            widgetId: '507f1f77bcf86cd799439999',
+            x: 0,
+            y: 0,
+            w: 4,
+            h: 3,
+          },
+        ],
+      });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('message');
+      expect((response.body as { message: string }).message).toContain(
+        'do not exist',
+      );
+    });
+
+    it('should reject dashboard update with non-existent widget', async () => {
+      const createResponse = await test.createDashboard({
+        title: 'Dashboard for Update Test',
+      });
+      const dashboardId = (createResponse.body as DashboardResponse)._id;
+
+      const updateResponse = await test.updateDashboard(dashboardId, {
+        layout: [
+          {
+            i: 'invalid-1',
+            widgetId: '507f1f77bcf86cd799439999',
+            x: 0,
+            y: 0,
+            w: 4,
+            h: 3,
+          },
+        ],
+      });
+
+      expect(updateResponse.status).toBe(400);
+      expect((updateResponse.body as { message: string }).message).toContain(
+        'do not exist',
+      );
+
+      await test.deleteDashboard(dashboardId);
+    });
+
+    it('should accept dashboard with ObjectId widgetId format', async () => {
+      // Create widget as regular user (same as datasource owner)
+      const widgetResponse = await test.post(
+        '/api/v1/widgets',
+        {
+          title: 'Test Widget for ObjectId',
+          type: 'kpi',
+          dataSourceId: test.getUserDataSourceId(),
+        },
+        { asAdmin: false },
+      );
+
+      if (widgetResponse.status === 201) {
+        const widgetId = (widgetResponse.body as { _id: string })._id;
+
+        // Create dashboard as regular user (same user that owns the widget)
+        const dashboardResponse = await test.createDashboard(
+          {
+            title: 'Dashboard with ObjectId Widget',
+            layout: [
+              {
+                i: 'widget-objectid',
+                widgetId: widgetId,
+                x: 0,
+                y: 0,
+                w: 4,
+                h: 3,
+              },
+            ],
+          },
+          false,
+        );
+
+        expect(dashboardResponse.status).toBe(201);
+        const dashboardBody = dashboardResponse.body as DashboardResponse;
+        expect(dashboardBody.layout[0].widgetId).toBe(widgetId);
+
+        await test.deleteDashboard(dashboardBody._id, false);
+        await test.delete(`/api/v1/widgets/${widgetId}`, { asAdmin: false });
+      }
     });
   });
 

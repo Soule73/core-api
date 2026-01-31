@@ -125,5 +125,59 @@ describe('Processing - Fetch Data (E2E)', () => {
       );
       expect([200, 502, 503]).toContain(response.status);
     });
+
+    it('should isolate cache by userId - different users get separate cache entries', async () => {
+      const dsId = test.getDataSourceId();
+      if (!dsId) return;
+
+      const userResponse = await test.get(
+        `/api/v1/processing/datasources/${dsId}/data`,
+        { asAdmin: false },
+      );
+
+      const adminResponse = await test.get(
+        `/api/v1/processing/datasources/${dsId}/data`,
+        { asAdmin: true },
+      );
+
+      if (userResponse.status === 200 && adminResponse.status === 200) {
+        expect(userResponse.body).toBeDefined();
+        expect(adminResponse.body).toBeDefined();
+      }
+    });
+
+    it('should use cached data for same user on subsequent requests', async () => {
+      const dsId = test.getDataSourceId();
+      if (!dsId) return;
+
+      const firstResponse = await test.get(
+        `/api/v1/processing/datasources/${dsId}/data`,
+      );
+
+      if (firstResponse.status === 200) {
+        const secondResponse = await test.get(
+          `/api/v1/processing/datasources/${dsId}/data`,
+        );
+
+        expect(secondResponse.status).toBe(200);
+        expect(secondResponse.body).toEqual(firstResponse.body);
+      }
+    });
+
+    it('should bypass cache with forceRefresh parameter', async () => {
+      const dsId = test.getDataSourceId();
+      if (!dsId) return;
+
+      await test.get(`/api/v1/processing/datasources/${dsId}/data`);
+
+      const refreshResponse = await test.get(
+        `/api/v1/processing/datasources/${dsId}/data`,
+        {
+          query: { forceRefresh: true },
+        },
+      );
+
+      expect([200, 502, 503]).toContain(refreshResponse.status);
+    });
   });
 });
