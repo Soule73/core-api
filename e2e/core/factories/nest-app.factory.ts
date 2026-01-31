@@ -2,7 +2,6 @@ import type { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from '@core/modules/auth';
@@ -20,15 +19,13 @@ import * as path from 'path';
 
 /**
  * Factory class responsible for creating and destroying NestJS test applications.
- * Uses MongoDB Memory Server for isolated database testing.
+ * Uses real MongoDB instance from docker-compose.e2e.yml for E2E testing.
  * Implements Single Responsibility Principle - only handles app lifecycle.
  */
 export class NestAppFactory implements IAppFactory {
-  private mongod: MongoMemoryServer | null = null;
-
   async create(): Promise<INestApplication> {
-    this.mongod = await MongoMemoryServer.create();
-    const mongoUri = this.mongod.getUri();
+    const mongoUri =
+      process.env.MONGODB_URI || 'mongodb://localhost:27018/datavise_test';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
@@ -38,6 +35,13 @@ export class NestAppFactory implements IAppFactory {
           load: [
             () => ({
               MONGODB_URI: mongoUri,
+              REDIS_HOST: process.env.REDIS_HOST || 'localhost',
+              REDIS_PORT: process.env.REDIS_PORT || '6380',
+              ELASTICSEARCH_URL:
+                process.env.ELASTICSEARCH_URL || 'http://localhost:9201',
+              JWT_SECRET:
+                process.env.JWT_SECRET || 'test-jwt-secret-for-e2e-testing',
+              JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1d',
             }),
           ],
         }),
@@ -65,10 +69,6 @@ export class NestAppFactory implements IAppFactory {
   async destroy(app: INestApplication): Promise<void> {
     if (app) {
       await app.close();
-    }
-    if (this.mongod) {
-      await this.mongod.stop();
-      this.mongod = null;
     }
   }
 
