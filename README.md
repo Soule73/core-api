@@ -1,6 +1,6 @@
 # Core API
 
-NestJS REST API for the CustomDash platform - Microservices architecture for CRUD operations.
+NestJS REST API for the CustomDash platform - Modular 2-tier architecture with integrated data processing.
 
 ## Tech Stack
 
