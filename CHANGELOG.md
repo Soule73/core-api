@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/Soule73/core-api/compare/v1.1.0...v1.2.0) (2026-01-31)
+
+
+### Features
+
+* **config:** add centralized app configuration with ConfigService ([98b133c](https://github.com/Soule73/core-api/commit/98b133c9f277a7e7116d79904849332fbbc3ec68))
+* **dashboards:** add custom styles for dashboards and layout items ([29ba892](https://github.com/Soule73/core-api/commit/29ba8922d99f90a43ddd3cafc53e9988254a0ca6))
+* **dashboards:** add widget validation and deletion protection ([dfceb15](https://github.com/Soule73/core-api/commit/dfceb15391100400f59fce94b6f42cff7ae87283))
+* **datasources:** add deletion protection when used by widgets ([1694240](https://github.com/Soule73/core-api/commit/1694240340bc5a3b27ad76f67725b6aacbc018fc))
+* **datasources:** update DataSourceResponse to use string for createdAt and updatedAt field ([abe0a27](https://github.com/Soule73/core-api/commit/abe0a27954ad2d60ea7a91c154d5fbde25dcee51))
+* **docker:** add docker-compose configuration for MongoDB, Redis, Elasticsearch, and mock APIs ([2ec21d1](https://github.com/Soule73/core-api/commit/2ec21d18ca5e95f1b75fc9dc96d46f837696248a))
+* **processing:** add userId to cache key for user isolation ([cca6681](https://github.com/Soule73/core-api/commit/cca6681c65b4a629ed809a2980c8ba27bcc83757))
+* **widgets:** add deletion protection when used in dashboards ([f7da0c1](https://github.com/Soule73/core-api/commit/f7da0c1b259e6f4b0e02f3a70f9b59669fc18f72))
+
+
+### Documentation
+
+* update project description in README to reflect architecture changes ([daf0101](https://github.com/Soule73/core-api/commit/daf010186fa158411da38eefddfe3b49804827c0))
+
+
+### Code Refactoring
+
+* **tests:** migrate E2E to Docker-based MongoDB infrastructure ([979ae44](https://github.com/Soule73/core-api/commit/979ae44581c942ba7a9563cfb9a80b901d73d7bd))
+
+
+### Tests
+
+* **e2e:** add deletion protection and validation tests ([a76eed2](https://github.com/Soule73/core-api/commit/a76eed2173a6d4cc1040fdace9aaa6b57b8c3f51))
+
 ## [1.1.0](https://github.com/Soule73/core-api/compare/v1.0.0...v1.1.0) (2026-01-22)
 
 
