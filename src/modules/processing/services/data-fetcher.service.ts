@@ -19,6 +19,7 @@ export interface FetchDataResult {
 
 export interface FetchDataOptions {
   dataSourceId: string;
+  userId?: string;
   from?: string;
   to?: string;
   page?: number;
@@ -69,7 +70,7 @@ export class DataFetcherService {
     const cachedResult = await this.cacheManager.get<FetchDataResult>(cacheKey);
     if (cachedResult) {
       this.logger.debug(`Cache hit for: ${cacheKey}`);
-      return { ...cachedResult, cached: true };
+      return cachedResult;
     }
 
     const connector = this.connectorFactory.getConnector(config.type);
@@ -161,6 +162,7 @@ export class DataFetcherService {
     const parts = [
       'processing',
       'fetch',
+      options.userId || 'anonymous',
       options.dataSourceId,
       options.from || 'no-from',
       options.to || 'no-to',

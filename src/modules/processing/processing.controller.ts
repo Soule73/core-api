@@ -17,6 +17,10 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {
+  CurrentUser,
+  type AuthUser,
+} from '../../common/decorators/current-user.decorator';
 import { DataFetcherService } from './services/data-fetcher.service';
 import { DataProcessorService } from './services/data-processor.service';
 import { SchemaAnalyzerService } from './schema-analyzer/schema-analyzer.service';
@@ -51,9 +55,11 @@ export class ProcessingController {
   async fetchData(
     @Param('id') id: string,
     @Query() query: Omit<FetchDataDto, 'dataSourceId'>,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.dataFetcherService.fetchData({
       dataSourceId: id,
+      userId: user.id,
       ...query,
     });
   }
