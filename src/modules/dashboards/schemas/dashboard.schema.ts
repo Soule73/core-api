@@ -4,6 +4,60 @@ import { Document, Types } from 'mongoose';
 export type DashboardDocument = Dashboard & Document;
 
 @Schema({ _id: false })
+export class LayoutItemStyles {
+  @Prop()
+  backgroundColor?: string;
+
+  @Prop()
+  backgroundGradient?: string;
+
+  @Prop()
+  borderColor?: string;
+
+  @Prop()
+  borderWidth?: string;
+
+  @Prop()
+  borderRadius?: string;
+
+  @Prop()
+  boxShadow?: string;
+
+  @Prop()
+  padding?: string;
+
+  @Prop()
+  textColor?: string;
+
+  @Prop()
+  labelColor?: string;
+
+  @Prop()
+  gridColor?: string;
+}
+
+@Schema({ _id: false })
+export class DashboardStyles {
+  @Prop()
+  backgroundColor?: string;
+
+  @Prop()
+  backgroundGradient?: string;
+
+  @Prop()
+  padding?: string;
+
+  @Prop()
+  gap?: string;
+
+  @Prop()
+  titleFontSize?: string;
+
+  @Prop()
+  titleColor?: string;
+}
+
+@Schema({ _id: false })
 export class DashboardLayoutItem {
   @Prop({ required: true })
   i!: string;
@@ -37,6 +91,9 @@ export class DashboardLayoutItem {
 
   @Prop()
   static?: boolean;
+
+  @Prop({ type: raw(LayoutItemStyles) })
+  styles?: LayoutItemStyles;
 }
 
 @Schema({ _id: false })
@@ -103,6 +160,9 @@ export class Dashboard {
 
   @Prop({ type: raw(DashboardTimeRange) })
   timeRange?: DashboardTimeRange;
+
+  @Prop({ type: raw(DashboardStyles) })
+  styles?: DashboardStyles;
 }
 
 export const DashboardSchema = SchemaFactory.createForClass(Dashboard);

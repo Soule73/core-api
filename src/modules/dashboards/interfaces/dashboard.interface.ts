@@ -1,3 +1,25 @@
+export interface LayoutItemStylesResponse {
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  borderColor?: string;
+  borderWidth?: string;
+  borderRadius?: string;
+  boxShadow?: string;
+  padding?: string;
+  textColor?: string;
+  labelColor?: string;
+  gridColor?: string;
+}
+
+export interface DashboardStylesResponse {
+  backgroundColor?: string;
+  backgroundGradient?: string;
+  padding?: string;
+  gap?: string;
+  titleFontSize?: string;
+  titleColor?: string;
+}
+
 export interface DashboardLayoutItemResponse {
   i: string;
   widgetId: string;
@@ -10,6 +32,7 @@ export interface DashboardLayoutItemResponse {
   maxW?: number;
   maxH?: number;
   static?: boolean;
+  styles?: LayoutItemStylesResponse;
 }
 
 export interface DashboardTimeRangeResponse {
@@ -25,6 +48,7 @@ export interface DashboardResponse {
   title: string;
   description?: string;
   layout: DashboardLayoutItemResponse[];
+  styles?: DashboardStylesResponse;
   ownerId: string;
   visibility: string;
   shareEnabled: boolean;

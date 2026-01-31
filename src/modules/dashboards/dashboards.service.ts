@@ -154,6 +154,7 @@ export class DashboardsService {
       title: dashboard.title,
       description: dashboard.description,
       layout: dashboard.layout || [],
+      styles: dashboard.styles,
       ownerId: dashboard.ownerId.toString(),
       visibility: dashboard.visibility,
       shareEnabled: dashboard.shareEnabled,

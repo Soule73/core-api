@@ -10,6 +10,154 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
+class LayoutItemStylesDto {
+  @ApiProperty({
+    description: 'Background color of the layout item',
+    example: '#ffffff',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  backgroundColor?: string;
+
+  @ApiProperty({
+    description: 'Background gradient of the layout item',
+    example: 'linear-gradient(135deg, #667eea, #764ba2)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  backgroundGradient?: string;
+
+  @ApiProperty({
+    description: 'Border color of the layout item',
+    example: '#e5e7eb',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  borderColor?: string;
+
+  @ApiProperty({
+    description: 'Border width of the layout item',
+    example: '1px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  borderWidth?: string;
+
+  @ApiProperty({
+    description: 'Border radius of the layout item',
+    example: '8px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  borderRadius?: string;
+
+  @ApiProperty({
+    description: 'Box shadow of the layout item',
+    example: '0 4px 6px rgba(0,0,0,0.1)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  boxShadow?: string;
+
+  @ApiProperty({
+    description: 'Padding of the layout item',
+    example: '16px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  padding?: string;
+
+  @ApiProperty({
+    description: 'Text color for chart labels and values',
+    example: '#111827',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  textColor?: string;
+
+  @ApiProperty({
+    description: 'Label color for chart axis labels',
+    example: '#6b7280',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  labelColor?: string;
+
+  @ApiProperty({
+    description: 'Grid line color for charts',
+    example: 'rgba(0, 0, 0, 0.1)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  gridColor?: string;
+}
+
+class DashboardStylesDto {
+  @ApiProperty({
+    description: 'Background color of the dashboard',
+    example: '#f3f4f6',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  backgroundColor?: string;
+
+  @ApiProperty({
+    description: 'Background gradient of the dashboard',
+    example: 'linear-gradient(to right, #4f46e5, #7c3aed)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  backgroundGradient?: string;
+
+  @ApiProperty({
+    description: 'Padding of the dashboard',
+    example: '16px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  padding?: string;
+
+  @ApiProperty({
+    description: 'Gap between widgets',
+    example: '8px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  gap?: string;
+
+  @ApiProperty({
+    description: 'Font size of the dashboard title',
+    example: '24px',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  titleFontSize?: string;
+
+  @ApiProperty({
+    description: 'Color of the dashboard title',
+    example: '#111827',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  titleColor?: string;
+}
+
 class LayoutItemDto {
   @ApiProperty({
     description: 'Unique identifier for the layout item',
@@ -97,6 +245,16 @@ class LayoutItemDto {
   @IsOptional()
   @IsBoolean()
   static?: boolean;
+
+  @ApiProperty({
+    description: 'Custom styles for the layout item',
+    type: LayoutItemStylesDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LayoutItemStylesDto)
+  styles?: LayoutItemStylesDto;
 }
 
 class TimeRangeDto {
@@ -209,4 +367,14 @@ export class CreateDashboardDto {
   @ValidateNested()
   @Type(() => TimeRangeDto)
   timeRange?: TimeRangeDto;
+
+  @ApiProperty({
+    description: 'Custom styles for the dashboard',
+    type: DashboardStylesDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DashboardStylesDto)
+  styles?: DashboardStylesDto;
 }
