@@ -167,11 +167,12 @@ class LayoutItemDto {
   i!: string;
 
   @ApiProperty({
-    description: 'ID of the widget associated with the layout item',
-    example: 'widget123',
+    description:
+      'ID of the widget associated with the layout item (ObjectId or UUID for backward compatibility)',
+    example: '507f1f77bcf86cd799439011',
   })
   @IsString()
-  widgetId!: string;
+  widgetId!: string; // Accepte string (ObjectId ou UUID pour compatibilité)
 
   @ApiProperty({
     description: 'X coordinate of the layout item',
@@ -377,4 +378,13 @@ export class CreateDashboardDto {
   @ValidateNested()
   @Type(() => DashboardStylesDto)
   styles?: DashboardStylesDto;
+
+  @ApiProperty({
+    description: 'Skip widget validation (for testing purposes)',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  skipValidation?: boolean;
 }

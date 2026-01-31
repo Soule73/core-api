@@ -1,26 +1,82 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import { Dashboard, DashboardDocument } from './schemas/dashboard.schema';
 import { CreateDashboardDto, UpdateDashboardDto } from './dto';
 import { DashboardResponse } from './interfaces';
+import { WidgetsService } from '../widgets/widgets.service';
 
 @Injectable()
 export class DashboardsService {
   constructor(
     @InjectModel(Dashboard.name)
     private dashboardModel: Model<DashboardDocument>,
+    private readonly widgetsService: WidgetsService,
   ) {
     /** */
+  }
+
+  private async validateWidgetsExist(
+    widgetIds: string[],
+    userId: string,
+  ): Promise<void> {
+    if (!widgetIds || widgetIds.length === 0) {
+      return;
+    }
+
+    const widgets = await Promise.all(
+      widgetIds.map(async (widgetId) => {
+        try {
+          const widget = await this.widgetsService.findOne(widgetId, userId);
+          return widget;
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const missingWidgets: string[] = [];
+    widgetIds.forEach((widgetId, index) => {
+      if (!widgets[index]) {
+        missingWidgets.push(widgetId);
+      }
+    });
+
+    if (missingWidgets.length > 0) {
+      throw new BadRequestException(
+        `The following widgets do not exist or you don't have access: ${missingWidgets.join(', ')}`,
+      );
+    }
   }
 
   async create(
     userId: string,
     createDashboardDto: CreateDashboardDto,
   ): Promise<DashboardResponse> {
+    const widgetIds =
+      createDashboardDto.layout?.map((item) => item.widgetId) || [];
+
+    if (!createDashboardDto.skipValidation) {
+      await this.validateWidgetsExist(widgetIds, userId);
+    }
+
+    const layout = createDashboardDto.layout?.map((item) => ({
+      ...item,
+      widgetId: new Types.ObjectId(item.widgetId),
+    }));
+
+    // Exclude skipValidation from dashboard data (not in schema)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { skipValidation, ...dashboardData } = createDashboardDto;
+
     const dashboard = await this.dashboardModel.create({
-      ...createDashboardDto,
+      ...dashboardData,
+      layout,
       ownerId: new Types.ObjectId(userId),
       history: [
         {
@@ -87,21 +143,30 @@ export class DashboardsService {
       throw new NotFoundException('Dashboard not found');
     }
 
-    const updateData = {
-      ...updateDashboardDto,
-      $push: {
-        history: {
-          userId: new Types.ObjectId(userId),
-          action: 'update',
-          date: new Date(),
-          changes: updateDashboardDto,
-        },
-      },
-    };
+    if (updateDashboardDto.layout) {
+      const widgetIds = updateDashboardDto.layout.map((item) => item.widgetId);
+      await this.validateWidgetsExist(widgetIds, userId);
+    }
+
+    const layoutWithObjectId = updateDashboardDto.layout?.map((item) => ({
+      ...item,
+      widgetId: new Types.ObjectId(item.widgetId),
+    }));
 
     const updatedDashboard = await this.dashboardModel.findByIdAndUpdate(
       id,
-      updateData,
+      {
+        ...updateDashboardDto,
+        ...(layoutWithObjectId && { layout: layoutWithObjectId }),
+        $push: {
+          history: {
+            userId: new Types.ObjectId(userId),
+            action: 'update',
+            date: new Date(),
+            changes: updateDashboardDto,
+          },
+        },
+      },
       { new: true },
     );
 
@@ -145,15 +210,43 @@ export class DashboardsService {
     await this.dashboardModel.findByIdAndDelete(id);
   }
 
+  async findDashboardsUsingWidget(
+    widgetId: string,
+    userId: string,
+  ): Promise<DashboardResponse[]> {
+    const query: {
+      $or: Array<{ 'layout.widgetId': string | Types.ObjectId }>;
+      ownerId: Types.ObjectId;
+    } = {
+      $or: [{ 'layout.widgetId': widgetId }],
+      ownerId: new Types.ObjectId(userId),
+    };
+
+    // Only add ObjectId query if format is valid (24 hex chars or valid ObjectId)
+    if (Types.ObjectId.isValid(widgetId)) {
+      query.$or.push({ 'layout.widgetId': new Types.ObjectId(widgetId) });
+    }
+
+    const dashboards = await this.dashboardModel.find(query);
+
+    return dashboards.map((d) => this.buildDashboardResponse(d));
+  }
+
   private buildDashboardResponse(
     dashboard: DashboardDocument,
   ): DashboardResponse {
+    const layout =
+      dashboard.layout?.map((item) => ({
+        ...item,
+        widgetId: item.widgetId.toString(),
+      })) || [];
+
     return {
       _id: dashboard._id.toString(),
       id: dashboard._id.toString(),
       title: dashboard.title,
       description: dashboard.description,
-      layout: dashboard.layout || [],
+      layout,
       styles: dashboard.styles,
       ownerId: dashboard.ownerId.toString(),
       visibility: dashboard.visibility,

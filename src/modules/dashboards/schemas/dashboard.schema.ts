@@ -62,8 +62,8 @@ export class DashboardLayoutItem {
   @Prop({ required: true })
   i!: string;
 
-  @Prop({ required: true })
-  widgetId!: string;
+  @Prop({ type: Types.ObjectId, ref: 'Widget', required: true })
+  widgetId!: Types.ObjectId;
 
   @Prop({ required: true })
   x!: number;

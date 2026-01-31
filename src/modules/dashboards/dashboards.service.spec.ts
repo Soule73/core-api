@@ -4,6 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException } from '@nestjs/common';
 import { DashboardsService } from './dashboards.service';
 import { Dashboard } from './schemas/dashboard.schema';
+import { WidgetsService } from '../widgets/widgets.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -33,6 +34,11 @@ const mockDashboardModel = {
   create: vi.fn(),
 };
 
+const mockWidgetsService = {
+  findOne: vi.fn(),
+  findByDataSource: vi.fn(),
+};
+
 describe('DashboardsService', () => {
   let service: DashboardsService;
 
@@ -45,6 +51,10 @@ describe('DashboardsService', () => {
         {
           provide: getModelToken(Dashboard.name),
           useValue: mockDashboardModel,
+        },
+        {
+          provide: WidgetsService,
+          useValue: mockWidgetsService,
         },
       ],
     }).compile();
@@ -64,6 +74,54 @@ describe('DashboardsService', () => {
       expect(result).toHaveProperty('_id');
       expect(result.title).toBe('Test Dashboard');
       expect(mockDashboardModel.create).toHaveBeenCalled();
+    });
+
+    it('should validate widgets exist before creating dashboard', async () => {
+      const widgetId = new Types.ObjectId().toString();
+      const mockWidgetDoc = {
+        _id: new Types.ObjectId(widgetId),
+        title: 'Test Widget',
+      };
+
+      mockWidgetsService.findOne.mockResolvedValue(mockWidgetDoc);
+      mockDashboardModel.create.mockResolvedValue({
+        ...mockDashboard,
+        layout: [
+          {
+            i: 'item1',
+            widgetId: new Types.ObjectId(widgetId),
+            x: 0,
+            y: 0,
+            w: 4,
+            h: 2,
+          },
+        ],
+      });
+
+      const result = await service.create(mockUserId, {
+        title: 'Test Dashboard',
+        visibility: 'private',
+        layout: [{ i: 'item1', widgetId, x: 0, y: 0, w: 4, h: 2 }],
+      });
+
+      expect(mockWidgetsService.findOne).toHaveBeenCalledWith(
+        widgetId,
+        mockUserId,
+      );
+      expect(result).toHaveProperty('_id');
+    });
+
+    it('should throw BadRequestException if widget does not exist', async () => {
+      const widgetId = new Types.ObjectId().toString();
+      mockWidgetsService.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.create(mockUserId, {
+          title: 'Test Dashboard',
+          visibility: 'private',
+          layout: [{ i: 'item1', widgetId, x: 0, y: 0, w: 4, h: 2 }],
+        }),
+      ).rejects.toThrow('The following widgets do not exist');
     });
   });
 
@@ -150,6 +208,40 @@ describe('DashboardsService', () => {
       expect(result.title).toBe('Updated Title');
     });
 
+    it('should validate widgets when layout is updated', async () => {
+      const widgetId = new Types.ObjectId().toString();
+      const mockWidgetDoc = {
+        _id: new Types.ObjectId(widgetId),
+        title: 'Test Widget',
+      };
+
+      mockWidgetsService.findOne.mockResolvedValue(mockWidgetDoc);
+      mockDashboardModel.findById.mockResolvedValue(mockDashboard);
+      mockDashboardModel.findByIdAndUpdate.mockResolvedValue({
+        ...mockDashboard,
+        layout: [
+          {
+            i: 'item1',
+            widgetId: new Types.ObjectId(widgetId),
+            x: 0,
+            y: 0,
+            w: 4,
+            h: 2,
+          },
+        ],
+      });
+
+      const result = await service.update(mockDashboardId, mockUserId, {
+        layout: [{ i: 'item1', widgetId, x: 0, y: 0, w: 4, h: 2 }],
+      });
+
+      expect(mockWidgetsService.findOne).toHaveBeenCalledWith(
+        widgetId,
+        mockUserId,
+      );
+      expect(result).toBeDefined();
+    });
+
     it('should throw NotFoundException if dashboard not found', async () => {
       mockDashboardModel.findById.mockResolvedValue(null);
 
@@ -227,6 +319,52 @@ describe('DashboardsService', () => {
       await expect(
         service.remove(mockDashboardId, 'otherUserId'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findDashboardsUsingWidget', () => {
+    it('should find dashboards using a specific widget (ObjectId)', async () => {
+      const widgetId = new Types.ObjectId().toString();
+      const dashboardWithWidget = {
+        ...mockDashboard,
+        layout: [
+          {
+            i: 'item1',
+            widgetId: new Types.ObjectId(widgetId),
+            x: 0,
+            y: 0,
+            w: 4,
+            h: 2,
+          },
+        ],
+      };
+
+      mockDashboardModel.find.mockResolvedValue([dashboardWithWidget]);
+
+      const result = await service.findDashboardsUsingWidget(
+        widgetId,
+        mockUserId,
+      );
+
+      expect(result).toHaveLength(1);
+      expect(mockDashboardModel.find).toHaveBeenCalledWith({
+        $or: [
+          { 'layout.widgetId': widgetId },
+          { 'layout.widgetId': new Types.ObjectId(widgetId) },
+        ],
+        ownerId: new Types.ObjectId(mockUserId),
+      });
+    });
+
+    it('should return empty array if no dashboards use the widget', async () => {
+      mockDashboardModel.find.mockResolvedValue([]);
+
+      const result = await service.findDashboardsUsingWidget(
+        'nonexistent',
+        mockUserId,
+      );
+
+      expect(result).toHaveLength(0);
     });
   });
 });

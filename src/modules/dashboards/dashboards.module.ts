@@ -5,6 +5,7 @@ import { DashboardsService } from './dashboards.service';
 import { Dashboard, DashboardSchema } from './schemas/dashboard.schema';
 import { AuthModule } from '../auth/auth.module';
 import { User, UserSchema } from '../auth/schemas/user.schema';
+import { WidgetsModule } from '../widgets/widgets.module';
 
 @Module({
   imports: [
@@ -13,9 +14,12 @@ import { User, UserSchema } from '../auth/schemas/user.schema';
       { name: User.name, schema: UserSchema },
     ]),
     AuthModule,
+    WidgetsModule,
   ],
   controllers: [DashboardsController],
   providers: [DashboardsService],
   exports: [DashboardsService],
 })
-export class DashboardsModule {}
+export class DashboardsModule {
+  /** */
+}
