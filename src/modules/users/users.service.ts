@@ -8,7 +8,12 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from '../auth/schemas/user.schema';
 import { Role, RoleDocument } from '../auth/schemas/role.schema';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  UpdatePreferencesDto,
+  UserPreferencesResponse,
+} from './dto';
 import {
   UserResponse,
   RoleResponse,
@@ -126,6 +131,64 @@ export class UsersService {
     if (!result) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  /**
+   * Get user preferences by user ID
+   * @param userId - The ID of the user
+   * @returns User preferences (theme, language, formatConfig)
+   */
+  async getPreferences(userId: string): Promise<UserPreferencesResponse> {
+    const user = await this.userModel.findById(userId).select('preferences');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const prefs = (user.preferences || {}) as UserPreferencesResponse;
+    return {
+      theme: prefs.theme,
+      language: prefs.language,
+      formatConfig: prefs.formatConfig,
+    };
+  }
+
+  /**
+   * Update user preferences
+   * @param userId - The ID of the user
+   * @param updatePreferencesDto - The preferences to update
+   * @returns Updated user preferences
+   */
+  async updatePreferences(
+    userId: string,
+    updatePreferencesDto: UpdatePreferencesDto,
+  ): Promise<UserPreferencesResponse> {
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Merge existing preferences with new values
+    const existingPrefs = (user.preferences || {}) as UserPreferencesResponse;
+    const newPrefs: UserPreferencesResponse = { ...existingPrefs };
+
+    if (updatePreferencesDto.theme !== undefined) {
+      newPrefs.theme = updatePreferencesDto.theme;
+    }
+    if (updatePreferencesDto.language !== undefined) {
+      newPrefs.language = updatePreferencesDto.language;
+    }
+    if (updatePreferencesDto.formatConfig !== undefined) {
+      newPrefs.formatConfig = {
+        ...existingPrefs.formatConfig,
+        ...updatePreferencesDto.formatConfig,
+      };
+    }
+
+    await this.userModel.findByIdAndUpdate(userId, {
+      preferences: newPrefs,
+    });
+
+    return newPrefs;
   }
 
   private async buildUserResponse(user: UserDocument): Promise<UserResponse> {

@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -18,17 +19,48 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { CreateUserDto, UpdateUserDto } from './dto';
+import { CreateUserDto, UpdateUserDto, UpdatePreferencesDto } from './dto';
+import type { UserPreferencesResponse } from './dto';
 import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserResponse } from '../../common/interfaces';
+import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('Users')
 @ApiBearerAuth('JWT-auth')
 @Controller('users')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) {
+    /** */
+  }
+
+  // ==================== User Preferences (no permission check) ====================
+
+  @Get('me/preferences')
+  @ApiOperation({ summary: 'Get current user preferences' })
+  @ApiResponse({ status: 200, description: 'User preferences returned' })
+  async getMyPreferences(
+    @CurrentUser() user: AuthUser,
+  ): Promise<UserPreferencesResponse> {
+    return await this.usersService.getPreferences(user.id);
+  }
+
+  @Patch('me/preferences')
+  @ApiOperation({ summary: 'Update current user preferences' })
+  @ApiResponse({ status: 200, description: 'User preferences updated' })
+  async updateMyPreferences(
+    @CurrentUser() user: AuthUser,
+    @Body() updatePreferencesDto: UpdatePreferencesDto,
+  ): Promise<UserPreferencesResponse> {
+    return await this.usersService.updatePreferences(
+      user.id,
+      updatePreferencesDto,
+    );
+  }
+
+  // ==================== User CRUD (requires permissions) ====================
 
   @Post()
   @RequirePermissions('user:canCreate')
