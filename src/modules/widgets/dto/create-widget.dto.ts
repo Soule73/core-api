@@ -10,6 +10,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+import * as constants from '../constants';
 
 export class CreateWidgetDto {
   @ApiProperty({
@@ -22,9 +23,10 @@ export class CreateWidgetDto {
   @ApiProperty({
     description: 'Type of the widget',
     example: 'bar',
+    enum: constants.WIDGET_TYPES,
   })
-  @IsString()
-  type!: string;
+  @IsEnum(constants.WIDGET_TYPES)
+  type!: constants.WidgetTypeValue;
 
   @ApiProperty({
     description: 'Data source ID for the widget',
