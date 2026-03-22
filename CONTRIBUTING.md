@@ -99,6 +99,40 @@ yarn test:e2e
 5. Push and create PR
 6. Wait for review
 
+## Versioning & Releases
+
+This project uses [standard-version](https://github.com/conventional-changelog/standard-version) for automated versioning based on conventional commits.
+
+### Creating a Release
+
+```bash
+# Auto-detect version bump from commits (recommended)
+yarn release
+
+# Manual bump
+yarn release:patch   # 1.0.0 → 1.0.1 (bug fixes)
+yarn release:minor   # 1.0.0 → 1.1.0 (new features)
+yarn release:major   # 1.0.0 → 2.0.0 (breaking changes)
+```
+
+This will:
+1. Bump the version in `package.json`
+2. Generate / update `CHANGELOG.md` from commit history
+3. Create a git tag
+
+> **Note**: Only `feat:` and `fix:` commit types appear in CHANGELOG.
+
+### Using Commitizen (interactive commits)
+
+Instead of `git commit`, use the guided prompt:
+
+```bash
+git add .
+yarn commit
+```
+
+The CLI guides you through type, scope, subject and breaking change declaration.
+
 ## Release Process
 
 ```bash

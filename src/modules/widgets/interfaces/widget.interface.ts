@@ -1,7 +1,6 @@
 export interface WidgetResponse {
   _id: string;
   id: string;
-  widgetId: string;
   title: string;
   type: string;
   dataSourceId: string;

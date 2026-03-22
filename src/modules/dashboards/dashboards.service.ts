@@ -214,20 +214,15 @@ export class DashboardsService {
     widgetId: string,
     userId: string,
   ): Promise<DashboardResponse[]> {
-    const query: {
-      $or: Array<{ 'layout.widgetId': string | Types.ObjectId }>;
-      ownerId: Types.ObjectId;
-    } = {
-      $or: [{ 'layout.widgetId': widgetId }],
-      ownerId: new Types.ObjectId(userId),
-    };
-
-    // Only add ObjectId query if format is valid (24 hex chars or valid ObjectId)
-    if (Types.ObjectId.isValid(widgetId)) {
-      query.$or.push({ 'layout.widgetId': new Types.ObjectId(widgetId) });
+    // Validate widgetId is a valid ObjectId
+    if (!Types.ObjectId.isValid(widgetId)) {
+      return [];
     }
 
-    const dashboards = await this.dashboardModel.find(query);
+    const dashboards = await this.dashboardModel.find({
+      'layout.widgetId': new Types.ObjectId(widgetId),
+      ownerId: new Types.ObjectId(userId),
+    });
 
     return dashboards.map((d) => this.buildDashboardResponse(d));
   }
@@ -237,8 +232,18 @@ export class DashboardsService {
   ): DashboardResponse {
     const layout =
       dashboard.layout?.map((item) => ({
-        ...item,
+        i: item.i,
+        x: item.x,
+        y: item.y,
+        w: item.w,
+        h: item.h,
         widgetId: item.widgetId.toString(),
+        minW: item.minW,
+        minH: item.minH,
+        maxW: item.maxW,
+        maxH: item.maxH,
+        static: item.static,
+        styles: item.styles,
       })) || [];
 
     return {
