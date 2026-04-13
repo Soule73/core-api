@@ -65,6 +65,34 @@ export class WidgetsService {
     return widgets.map((w) => this.buildWidgetResponse(w));
   }
 
+  /**
+   * Retrieves all widgets associated with a specific AI conversation.
+   *
+   * @param conversationId - The conversation ID to filter by
+   * @param userId - The requesting user's ID
+   * @returns Array of widgets linked to the conversation
+   */
+  async findByConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<WidgetResponse[]> {
+    if (!Types.ObjectId.isValid(conversationId)) {
+      return [];
+    }
+
+    const widgets = await this.widgetModel
+      .find({
+        conversationId: new Types.ObjectId(conversationId),
+        $or: [
+          { ownerId: new Types.ObjectId(userId) },
+          { visibility: 'public' },
+        ],
+      })
+      .sort({ createdAt: 1 });
+
+    return widgets.map((w) => this.buildWidgetResponse(w));
+  }
+
   async findOne(id: string, userId: string): Promise<WidgetResponse> {
     if (!Types.ObjectId.isValid(id)) {
       throw new NotFoundException('Widget not found');

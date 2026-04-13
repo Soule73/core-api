@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DatabaseModule } from './database';
@@ -12,6 +13,7 @@ import { WidgetsModule } from './modules/widgets';
 import { DataSourcesModule } from './modules/datasources';
 import { AIConversationsModule } from './modules/ai-conversations';
 import { ProcessingModule } from './modules/processing';
+import { AIModule } from './modules/ai';
 import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
 
 @Module({
@@ -28,6 +30,12 @@ import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
         dbName: config.get<string>('database.dbName'),
       }),
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     DatabaseModule,
     AuthModule,
     UsersModule,
@@ -37,6 +45,7 @@ import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
     DataSourcesModule,
     AIConversationsModule,
     ProcessingModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [AppService],
