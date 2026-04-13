@@ -70,4 +70,15 @@ export class UpdateAIConversationDto {
   @IsArray()
   @IsString({ each: true })
   suggestions?: string[];
+
+  @IsOptional()
+  dataSourceSummary?: {
+    totalRows: number;
+    columns: Array<{
+      name: string;
+      type: string;
+      uniqueValues?: number;
+      sampleValues?: unknown[];
+    }>;
+  };
 }
