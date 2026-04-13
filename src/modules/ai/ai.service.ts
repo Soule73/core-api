@@ -95,8 +95,7 @@ export class AIService {
     }));
 
     const maxWidgets = dto.maxWidgets ?? DEFAULT_MAX_WIDGETS;
-    const systemPrompt =
-      this.promptBuilderService.buildSystemPrompt();
+    const systemPrompt = this.promptBuilderService.buildSystemPrompt();
     const userPrompt = this.promptBuilderService.buildUserPrompt(
       dto.userPrompt,
       schemaAnalysis,
