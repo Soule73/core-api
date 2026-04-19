@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import express from 'express';
 import type { Request, Response } from 'express';
-import { AppModule } from '../src/app.module.js';
+import { AppModule } from '../dist/app.module';
 
 const expressApp = express();
 
