@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from '@core/modules/auth';
 import { UsersModule } from '@core/modules/users';
 import { RolesModule } from '@core/modules/roles';
@@ -12,6 +13,7 @@ import { WidgetsModule } from '@core/modules/widgets';
 import { DataSourcesModule } from '@core/modules/datasources';
 import { AIConversationsModule } from '@core/modules/ai-conversations';
 import { ProcessingModule } from '@core/modules/processing';
+import { AIModule } from '@core/modules/ai';
 import { AppController } from '@core/app.controller';
 import { AppService } from '@core/app.service';
 import type { IAppFactory } from '../interfaces';
@@ -46,6 +48,7 @@ export class NestAppFactory implements IAppFactory {
           ],
         }),
         MongooseModule.forRoot(mongoUri),
+        ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]), // high TTL (seconds) to prevent throttling during tests
         AuthModule,
         UsersModule,
         RolesModule,
@@ -54,6 +57,7 @@ export class NestAppFactory implements IAppFactory {
         DataSourcesModule,
         AIConversationsModule,
         ProcessingModule,
+        AIModule,
       ],
       controllers: [AppController],
       providers: [AppService],

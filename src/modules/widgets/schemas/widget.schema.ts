@@ -20,9 +20,6 @@ export class WidgetHistoryItem {
 
 @Schema({ timestamps: true })
 export class Widget {
-  @Prop({ required: true, unique: true })
-  widgetId!: string;
-
   @Prop({ required: true })
   title!: string;
 

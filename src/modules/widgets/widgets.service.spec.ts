@@ -10,11 +10,9 @@ import { Types } from 'mongoose';
 const mockUserId = '507f1f77bcf86cd799439011';
 const mockWidgetId = '507f1f77bcf86cd799439012';
 const mockDataSourceId = '507f1f77bcf86cd799439013';
-const mockWidgetUuid = 'widget-uuid-123';
 
 const mockWidget = {
   _id: new Types.ObjectId(mockWidgetId),
-  widgetId: mockWidgetUuid,
   title: 'Test Widget',
   type: 'bar',
   dataSourceId: new Types.ObjectId(mockDataSourceId),
@@ -104,7 +102,7 @@ describe('WidgetsService', () => {
 
   describe('findOne', () => {
     it('should return a widget by id for owner', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
 
       const result = await service.findOne(mockWidgetId, mockUserId);
 
@@ -112,24 +110,22 @@ describe('WidgetsService', () => {
       expect(result.title).toBe('Test Widget');
     });
 
-    it('should return a widget by widgetId', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
-
-      const result = await service.findOne(mockWidgetUuid, mockUserId);
-
-      expect(result.widgetId).toBe(mockWidgetUuid);
+    it('should throw NotFoundException for invalid ObjectId', async () => {
+      await expect(service.findOne('invalid-id', mockUserId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if widget not found', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(null);
+      mockWidgetModel.findById.mockResolvedValue(null);
 
-      await expect(service.findOne('invalidId', mockUserId)).rejects.toThrow(
+      await expect(service.findOne(mockWidgetId, mockUserId)).rejects.toThrow(
         NotFoundException,
       );
     });
 
     it('should throw NotFoundException for non-owner on private widget', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
 
       await expect(
         service.findOne(mockWidgetId, 'otherUserId'),
@@ -138,7 +134,7 @@ describe('WidgetsService', () => {
 
     it('should allow access to public widget for non-owner', async () => {
       const publicWidget = { ...mockWidget, visibility: 'public' };
-      mockWidgetModel.findOne.mockResolvedValue(publicWidget);
+      mockWidgetModel.findById.mockResolvedValue(publicWidget);
 
       const result = await service.findOne(mockWidgetId, 'otherUserId');
 
@@ -149,7 +145,7 @@ describe('WidgetsService', () => {
   describe('update', () => {
     it('should update a widget successfully', async () => {
       const updatedWidget = { ...mockWidget, title: 'Updated Widget' };
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
       mockWidgetModel.findByIdAndUpdate.mockResolvedValue(updatedWidget);
 
       const result = await service.update(mockWidgetId, mockUserId, {
@@ -160,15 +156,17 @@ describe('WidgetsService', () => {
     });
 
     it('should throw NotFoundException if widget not found', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(null);
+      mockWidgetModel.findById.mockResolvedValue(null);
 
       await expect(
-        service.update('invalidId', mockUserId, { title: 'test' }),
+        service.update('507f1f77bcf86cd799439099', mockUserId, {
+          title: 'test',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if not owner', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
 
       await expect(
         service.update(mockWidgetId, 'otherUserId', { title: 'test' }),
@@ -178,7 +176,7 @@ describe('WidgetsService', () => {
 
   describe('remove', () => {
     it('should delete a widget successfully when not used', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
       mockDashboardsService.findDashboardsUsingWidget.mockResolvedValue([]);
       mockWidgetModel.findByIdAndDelete.mockResolvedValue(mockWidget);
 
@@ -188,11 +186,11 @@ describe('WidgetsService', () => {
 
       expect(
         mockDashboardsService.findDashboardsUsingWidget,
-      ).toHaveBeenCalledWith(mockWidgetUuid, mockUserId);
+      ).toHaveBeenCalledWith(mockWidgetId, mockUserId);
     });
 
     it('should throw BadRequestException if widget is used in dashboards', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
       mockDashboardsService.findDashboardsUsingWidget.mockResolvedValue([
         { _id: '1', title: 'Dashboard 1' },
         { _id: '2', title: 'Dashboard 2' },
@@ -206,15 +204,15 @@ describe('WidgetsService', () => {
     });
 
     it('should throw NotFoundException if widget not found', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(null);
+      mockWidgetModel.findById.mockResolvedValue(null);
 
-      await expect(service.remove('invalidId', mockUserId)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.remove('507f1f77bcf86cd799439099', mockUserId),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw NotFoundException if not owner', async () => {
-      mockWidgetModel.findOne.mockResolvedValue(mockWidget);
+      mockWidgetModel.findById.mockResolvedValue(mockWidget);
 
       await expect(service.remove(mockWidgetId, 'otherUserId')).rejects.toThrow(
         NotFoundException,

@@ -5,6 +5,7 @@
     "test",
     "dist",
     "e2e",
+    "api",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*.e2e-spec.ts"

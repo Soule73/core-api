@@ -54,11 +54,20 @@ export class WidgetsController {
     required: false,
     description: 'Filter by data source',
   })
+  @ApiQuery({
+    name: 'conversationId',
+    required: false,
+    description: 'Filter by AI conversation',
+  })
   @ApiResponse({ status: 200, description: 'List of widgets' })
   async findAll(
     @CurrentUser() user: AuthUser,
     @Query('dataSourceId') dataSourceId?: string,
+    @Query('conversationId') conversationId?: string,
   ): Promise<WidgetResponse[]> {
+    if (conversationId) {
+      return this.widgetsService.findByConversation(conversationId, user.id);
+    }
     if (dataSourceId) {
       return this.widgetsService.findByDataSource(dataSourceId, user.id);
     }

@@ -6,4 +6,6 @@ export default registerAs('app', () => ({
   corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
     'http://localhost:5173',
   ],
+  openaiApiKey: process.env.OPENAI_API_KEY,
+  aiModel: process.env.AI_MODEL || 'gpt-4o-mini',
 }));

@@ -7,6 +7,7 @@ import {
   IsEnum,
   IsBoolean,
 } from 'class-validator';
+import * as constants from '../constants';
 
 export class UpdateWidgetDto {
   @ApiProperty({
@@ -22,10 +23,11 @@ export class UpdateWidgetDto {
     description: 'Type of the widget',
     example: 'bar',
     required: false,
+    enum: constants.WIDGET_TYPES,
   })
   @IsOptional()
-  @IsString()
-  type?: string;
+  @IsEnum(constants.WIDGET_TYPES)
+  type?: constants.WidgetTypeValue;
 
   @ApiProperty({
     description: 'Data source ID for the widget',

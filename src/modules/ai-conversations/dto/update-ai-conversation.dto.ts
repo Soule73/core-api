@@ -4,6 +4,7 @@ import {
   IsArray,
   ValidateNested,
   IsEnum,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -23,6 +24,49 @@ class AIMessageDto {
   })
   @IsString()
   content!: string;
+}
+
+class ColumnSummaryDto {
+  @ApiProperty({ description: 'Column name', example: 'category' })
+  @IsString()
+  name!: string;
+
+  @ApiProperty({ description: 'Column type', example: 'string' })
+  @IsString()
+  type!: string;
+
+  @ApiProperty({
+    description: 'Number of unique values',
+    example: 12,
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  uniqueValues?: number;
+
+  @ApiProperty({
+    description: 'Sample values from the column',
+    required: false,
+    type: [Object],
+  })
+  @IsOptional()
+  @IsArray()
+  sampleValues?: unknown[];
+}
+
+class DataSourceSummaryDto {
+  @ApiProperty({
+    description: 'Total row count in the data source',
+    example: 1000,
+  })
+  @IsNumber()
+  totalRows!: number;
+
+  @ApiProperty({ description: 'Column summaries', type: [ColumnSummaryDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ColumnSummaryDto)
+  columns!: ColumnSummaryDto[];
 }
 
 export class UpdateAIConversationDto {
@@ -70,4 +114,14 @@ export class UpdateAIConversationDto {
   @IsArray()
   @IsString({ each: true })
   suggestions?: string[];
+
+  @ApiProperty({
+    description: 'Summary of the data source used in this conversation',
+    type: DataSourceSummaryDto,
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => DataSourceSummaryDto)
+  dataSourceSummary?: DataSourceSummaryDto;
 }

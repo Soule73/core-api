@@ -158,7 +158,7 @@ describe('Widgets Module (E2E)', () => {
       const body = response.body as WidgetResponse;
       expect(body).toHaveProperty('title', 'Test Widget');
       expect(body).toHaveProperty('type', 'bar');
-      expect(body).toHaveProperty('widgetId');
+      expect(body).toHaveProperty('_id');
       test.setCreatedWidgetId(body._id);
     });
 

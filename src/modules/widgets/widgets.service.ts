@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 import { Widget, WidgetDocument } from './schemas/widget.schema';
 import { CreateWidgetDto, UpdateWidgetDto } from './dto';
 import { WidgetResponse } from './interfaces';
@@ -29,7 +28,6 @@ export class WidgetsService {
   ): Promise<WidgetResponse> {
     const widget = await this.widgetModel.create({
       ...createWidgetDto,
-      widgetId: uuidv4(),
       dataSourceId: new Types.ObjectId(createWidgetDto.dataSourceId),
       conversationId: createWidgetDto.conversationId
         ? new Types.ObjectId(createWidgetDto.conversationId)
@@ -67,10 +65,40 @@ export class WidgetsService {
     return widgets.map((w) => this.buildWidgetResponse(w));
   }
 
+  /**
+   * Retrieves all widgets associated with a specific AI conversation.
+   *
+   * @param conversationId - The conversation ID to filter by
+   * @param userId - The requesting user's ID
+   * @returns Array of widgets linked to the conversation
+   */
+  async findByConversation(
+    conversationId: string,
+    userId: string,
+  ): Promise<WidgetResponse[]> {
+    if (!Types.ObjectId.isValid(conversationId)) {
+      return [];
+    }
+
+    const widgets = await this.widgetModel
+      .find({
+        conversationId: new Types.ObjectId(conversationId),
+        $or: [
+          { ownerId: new Types.ObjectId(userId) },
+          { visibility: 'public' },
+        ],
+      })
+      .sort({ createdAt: 1 });
+
+    return widgets.map((w) => this.buildWidgetResponse(w));
+  }
+
   async findOne(id: string, userId: string): Promise<WidgetResponse> {
-    const widget = await this.widgetModel.findOne({
-      $or: [{ _id: id }, { widgetId: id }],
-    });
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Widget not found');
+    }
+
+    const widget = await this.widgetModel.findById(id);
 
     if (!widget) {
       throw new NotFoundException('Widget not found');
@@ -91,9 +119,11 @@ export class WidgetsService {
     userId: string,
     updateWidgetDto: UpdateWidgetDto,
   ): Promise<WidgetResponse> {
-    const widget = await this.widgetModel.findOne({
-      $or: [{ _id: id }, { widgetId: id }],
-    });
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Widget not found');
+    }
+
+    const widget = await this.widgetModel.findById(id);
 
     if (!widget) {
       throw new NotFoundException('Widget not found');
@@ -130,9 +160,11 @@ export class WidgetsService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    const widget = await this.widgetModel.findOne({
-      $or: [{ _id: id }, { widgetId: id }],
-    });
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException('Widget not found');
+    }
+
+    const widget = await this.widgetModel.findById(id);
 
     if (!widget) {
       throw new NotFoundException('Widget not found');
@@ -143,12 +175,8 @@ export class WidgetsService {
     }
 
     // Check if widget is used in dashboards
-    // Use widget._id (not widget.widgetId) because layout.widgetId stores ObjectId references
     const dashboardsUsing =
-      await this.dashboardsService.findDashboardsUsingWidget(
-        widget._id.toString(),
-        userId,
-      );
+      await this.dashboardsService.findDashboardsUsingWidget(id, userId);
 
     if (dashboardsUsing.length > 0) {
       const dashboardTitles = dashboardsUsing.map((d) => d.title).join(', ');
@@ -164,7 +192,6 @@ export class WidgetsService {
     return {
       _id: widget._id.toString(),
       id: widget._id.toString(),
-      widgetId: widget.widgetId,
       title: widget.title,
       type: widget.type,
       dataSourceId: widget.dataSourceId.toString(),

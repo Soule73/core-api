@@ -13,13 +13,13 @@
     "target": "ES2023",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
+    // "baseUrl": "./",
     "paths": {
       "@core/*": [
-        "src/*"
+        "./src/*"
       ],
       "@e2e/*": [
-        "e2e/*"
+        "./e2e/*"
       ]
     },
     "incremental": true,
