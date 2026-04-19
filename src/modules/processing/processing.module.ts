@@ -3,8 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import type { default as KeyvClass } from 'keyv';
+import type { default as KeyvRedisClass } from '@keyv/redis';
 
 import { ProcessingController } from './processing.controller';
+
+type KeyvCtor = new (opts: { store: KeyvRedisClass<string> }) => KeyvClass;
+type KeyvRedisCtor = new (url: string) => KeyvRedisClass<string>;
 
 import { DataFetcherService } from './services/data-fetcher.service';
 import { DataProcessorService } from './services/data-processor.service';
@@ -48,8 +53,13 @@ import {
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
-        const { default: Keyv } = await import('keyv');
-        const { default: KeyvRedis } = await import('@keyv/redis');
+        const { default: Keyv } = (await import('keyv')) as unknown as {
+          default: KeyvCtor;
+        };
+        const { default: KeyvRedis } =
+          (await import('@keyv/redis')) as unknown as {
+            default: KeyvRedisCtor;
+          };
 
         const host = config.get<string>('redis.host', 'localhost');
         const port = config.get<number>('redis.port', 6379);
