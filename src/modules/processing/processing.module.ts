@@ -53,13 +53,12 @@ import {
           return { ttl: config.get<number>('redis.ttl', 300000) };
         }
 
+        const tlsEnabled = config.get<boolean>('redis.tls', false);
         const store = await redisStore({
-          socket: {
-            host: config.get<string>('redis.host', 'localhost'),
-            port: config.get<number>('redis.port', 6379),
-            tls: config.get<boolean>('redis.tls', false),
-          },
+          host: config.get<string>('redis.host', 'localhost'),
+          port: config.get<number>('redis.port', 6379),
           password: config.get<string | undefined>('redis.password'),
+          tls: tlsEnabled ? {} : undefined,
         });
 
         return {
