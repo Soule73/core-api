@@ -3,8 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import Keyv from 'keyv';
-import KeyvRedis from '@keyv/redis';
 
 import { ProcessingController } from './processing.controller';
 
@@ -49,7 +47,10 @@ import {
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
+      useFactory: async (config: ConfigService) => {
+        const { default: Keyv } = await import('keyv');
+        const { default: KeyvRedis } = await import('@keyv/redis');
+
         const host = config.get<string>('redis.host', 'localhost');
         const port = config.get<number>('redis.port', 6379);
         const password = config.get<string | undefined>('redis.password');
