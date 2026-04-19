@@ -47,6 +47,12 @@ import {
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => {
+        const isRedisConfigured = !!process.env.REDIS_HOST;
+
+        if (!isRedisConfigured) {
+          return { ttl: config.get<number>('redis.ttl', 300000) };
+        }
+
         const store = await redisStore({
           socket: {
             host: config.get<string>('redis.host', 'localhost'),

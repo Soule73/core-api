@@ -63,11 +63,26 @@ export class DataFetcherService {
     const cacheKey = this.generateCacheKey(options);
 
     if (options.forceRefresh) {
-      await this.cacheManager.del(cacheKey);
-      this.logger.debug(`Cache invalidated for: ${cacheKey}`);
+      try {
+        await this.cacheManager.del(cacheKey);
+        this.logger.debug(`Cache invalidated for: ${cacheKey}`);
+      } catch (err) {
+        this.logger.warn(
+          `Cache invalidation skipped (unavailable): ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
 
-    const cachedResult = await this.cacheManager.get<FetchDataResult>(cacheKey);
+    let cachedResult: FetchDataResult | undefined;
+    try {
+      cachedResult =
+        await this.cacheManager.get<FetchDataResult>(cacheKey) ?? undefined;
+    } catch (err) {
+      this.logger.warn(
+        `Cache read skipped (unavailable): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
     if (cachedResult) {
       this.logger.debug(`Cache hit for: ${cacheKey}`);
       return cachedResult;
@@ -85,7 +100,13 @@ export class DataFetcherService {
       message: 'Data fetched successfully',
     };
 
-    await this.cacheManager.set(cacheKey, fetchResult, ttl);
+    try {
+      await this.cacheManager.set(cacheKey, fetchResult, ttl);
+    } catch (err) {
+      this.logger.warn(
+        `Cache write skipped (unavailable): ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
 
     return fetchResult;
   }
