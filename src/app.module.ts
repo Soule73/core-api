@@ -32,7 +32,7 @@ import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
     }),
     ThrottlerModule.forRoot([
       {
-        ttl: 60000,
+        ttl: 60,
         limit: 60,
       },
     ]),

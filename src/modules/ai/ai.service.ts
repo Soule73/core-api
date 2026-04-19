@@ -209,7 +209,16 @@ export class AIService {
 
     this.logger.debug(`OpenAI raw response length: ${content.length}`);
 
-    return JSON.parse(content) as Record<string, unknown>;
+    try {
+      return JSON.parse(content) as Record<string, unknown>;
+    } catch (error) {
+      this.logger.warn(
+        `OpenAI returned malformed JSON: ${
+          error instanceof Error ? error.message : 'Unknown parse error'
+        }`,
+      );
+      throw new ServiceUnavailableException('OpenAI returned malformed JSON');
+    }
   }
 
   private extractRawWidgets(

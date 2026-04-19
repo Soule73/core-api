@@ -104,6 +104,28 @@ export class WidgetConfigValidatorService {
         `Widget config missing required keys: ${missingKeys.join(', ')}`,
       );
     }
+
+    if (!Array.isArray(configObj.metrics)) {
+      throw new BadRequestException(
+        'Widget config field "metrics" must be an array',
+      );
+    }
+
+    if (!Array.isArray(configObj.buckets)) {
+      throw new BadRequestException(
+        'Widget config field "buckets" must be an array',
+      );
+    }
+
+    if (
+      !configObj.widgetParams ||
+      typeof configObj.widgetParams !== 'object' ||
+      Array.isArray(configObj.widgetParams)
+    ) {
+      throw new BadRequestException(
+        'Widget config field "widgetParams" must be an object',
+      );
+    }
   }
 
   private validateMetricFields(

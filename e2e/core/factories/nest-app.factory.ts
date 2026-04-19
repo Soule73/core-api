@@ -48,7 +48,7 @@ export class NestAppFactory implements IAppFactory {
           ],
         }),
         MongooseModule.forRoot(mongoUri),
-        ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]),
+        ThrottlerModule.forRoot([{ ttl: 60000, limit: 1000 }]), // high TTL (seconds) to prevent throttling during tests
         AuthModule,
         UsersModule,
         RolesModule,

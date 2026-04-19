@@ -33,7 +33,7 @@ export class AIController {
   @Post('generate-widget')
   @RequirePermissions('widget:canCreate')
   @HttpCode(HttpStatus.CREATED)
-  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @Throttle({ default: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Generate a widget using AI from a data source' })
   @ApiResponse({
     status: 201,
