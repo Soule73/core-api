@@ -28,6 +28,8 @@ import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('database.uri'),
         dbName: config.get<string>('database.dbName'),
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
       }),
     }),
     ThrottlerModule.forRoot([
