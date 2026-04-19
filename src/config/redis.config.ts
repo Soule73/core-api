@@ -7,4 +7,5 @@ export default registerAs('redis', () => ({
   db: parseInt(process.env.REDIS_DB || '0', 10),
   keyPrefix: process.env.REDIS_KEY_PREFIX || 'datavise:',
   ttl: parseInt(process.env.REDIS_TTL || '300000', 10),
+  tls: process.env.REDIS_TLS === 'true',
 }));

@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import Keyv from 'keyv';
+import KeyvRedis from '@keyv/redis';
 
 import { ProcessingController } from './processing.controller';
 
@@ -43,9 +46,27 @@ import {
       timeout: 30000,
       maxRedirects: 5,
     }),
-    CacheModule.register({
-      ttl: 300000,
-      max: 1000,
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const host = config.get<string>('redis.host', 'localhost');
+        const port = config.get<number>('redis.port', 6379);
+        const password = config.get<string | undefined>('redis.password');
+        const tls = config.get<boolean>('redis.tls', false);
+        const ttl = config.get<number>('redis.ttl', 300000);
+
+        const redisUrl = `redis${tls ? 's' : ''}://:${password}@${host}:${port}`;
+
+        return {
+          ttl,
+          stores: [
+            new Keyv({
+              store: new KeyvRedis(redisUrl),
+            }),
+          ],
+        };
+      },
     }),
   ],
   controllers: [ProcessingController],
