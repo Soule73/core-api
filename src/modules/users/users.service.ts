@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import { User, UserDocument } from '../auth/schemas/user.schema';
 import { Role, RoleDocument } from '../auth/schemas/role.schema';
@@ -38,7 +38,9 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
-  ) {}
+  ) {
+    //
+  }
 
   async create(createUserDto: CreateUserDto): Promise<UserResponse> {
     const existingUser = await this.userModel.findOne({
@@ -54,13 +56,15 @@ export class UsersService {
       roleId = defaultRole?._id?.toString();
     }
 
+    const roleObjectId = roleId ? new Types.ObjectId(roleId) : undefined;
+
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
     const user = await this.userModel.create({
       username: createUserDto.username,
       email: createUserDto.email,
       password: hashedPassword,
-      roleId,
+      roleId: roleObjectId,
     });
 
     return this.buildUserResponse(user);

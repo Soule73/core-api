@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { HttpModule } from '@nestjs/axios';
 import { CacheModule, CacheStore } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-ioredis-yet';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ProcessingController } from './processing.controller';
 import { DataFetcherService } from './services/data-fetcher.service';
@@ -32,8 +33,6 @@ import {
   DataSource,
   DataSourceSchema,
 } from '../datasources/schemas/datasource.schema';
-import Keyv from 'keyv';
-import KeyvRedis from '@keyv/redis';
 
 @Module({
   imports: [
@@ -47,20 +46,19 @@ import KeyvRedis from '@keyv/redis';
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const host = config.get<string>('redis.host', 'localhost');
-        const port = config.get<number>('redis.port', 6379);
-        const password = config.get<string | undefined>('redis.password');
-        const tls = config.get<boolean>('redis.tls', false);
-        const ttl = config.get<number>('redis.ttl', 300000);
-
-        const redisUrl = `redis${tls ? 's' : ''}://:${password}@${host}:${port}`;
+      useFactory: async (config: ConfigService) => {
+        const store = await redisStore({
+          socket: {
+            host: config.get<string>('redis.host', 'localhost'),
+            port: config.get<number>('redis.port', 6379),
+            tls: config.get<boolean>('redis.tls', false),
+          },
+          password: config.get<string | undefined>('redis.password'),
+        });
 
         return {
-          ttl,
-          store: new Keyv({
-            store: new KeyvRedis(redisUrl),
-          }) as unknown as CacheStore,
+          store: store as unknown as CacheStore,
+          ttl: config.get<number>('redis.ttl', 300000),
         };
       },
     }),

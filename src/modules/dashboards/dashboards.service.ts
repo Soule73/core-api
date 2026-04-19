@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 import { Dashboard, DashboardDocument } from './schemas/dashboard.schema';
 import { CreateDashboardDto, UpdateDashboardDto } from './dto';
 import { DashboardResponse } from './interfaces';
@@ -185,7 +184,7 @@ export class DashboardsService {
     }
 
     const shareEnabled = !dashboard.shareEnabled;
-    const shareId = shareEnabled ? uuidv4() : null;
+    const shareId = shareEnabled ? crypto.randomUUID() : null;
 
     const updatedDashboard = await this.dashboardModel.findByIdAndUpdate(
       id,
