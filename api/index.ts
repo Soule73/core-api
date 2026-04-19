@@ -1,12 +1,11 @@
-// @ts-nocheck
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, type Type } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import express from 'express';
+import path from 'path';
 import type { Request, Response } from 'express';
-import { AppModule } from '../dist/app.module';
 
 const expressApp = express();
 
@@ -14,8 +13,17 @@ const expressApp = express();
  * Bootstraps the NestJS application using the Express adapter.
  * The promise is cached at module level so the initialization runs only
  * once per serverless function instance (warm starts reuse it).
+ *
+ * AppModule is loaded via a dynamic require so esbuild does not attempt
+ * to bundle the pre-compiled dist/ output. The path is resolved from
+ * process.cwd() (/var/task on Vercel) where includeFiles places dist/.
  */
 const bootstrapPromise = (async () => {
+  const appModulePath = path.join(process.cwd(), 'dist', 'app.module');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { AppModule } = require(appModulePath) as {
+    AppModule: Type<unknown>;
+  };
   const app = await NestFactory.create(
     AppModule,
     new ExpressAdapter(expressApp),
