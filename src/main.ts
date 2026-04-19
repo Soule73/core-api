@@ -52,6 +52,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document, {
     customSiteTitle: 'Core API Documentation',
     customfavIcon: 'https://nestjs.com/img/logo-small.svg',
+    customCssUrl: 'https://unpkg.com/swagger-ui-dist@5/swagger-ui.css',
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js',
+    ],
     customCss: '.swagger-ui .topbar { display: none }',
   });
 
