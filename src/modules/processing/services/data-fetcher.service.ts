@@ -76,7 +76,7 @@ export class DataFetcherService {
     let cachedResult: FetchDataResult | undefined;
     try {
       cachedResult =
-        await this.cacheManager.get<FetchDataResult>(cacheKey) ?? undefined;
+        (await this.cacheManager.get<FetchDataResult>(cacheKey)) ?? undefined;
     } catch (err) {
       this.logger.warn(
         `Cache read skipped (unavailable): ${err instanceof Error ? err.message : String(err)}`,
