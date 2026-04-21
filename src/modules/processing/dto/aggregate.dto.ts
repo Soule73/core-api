@@ -9,7 +9,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { AggregationType } from '../aggregators';
-import { FilterOperator, FILTER_OPERATORS } from '../filters';
+import type { FilterOperator } from '../filters';
+import { FILTER_OPERATORS } from '../filters';
 
 export class MetricDto {
   @ApiProperty({ description: 'Field to aggregate' })
