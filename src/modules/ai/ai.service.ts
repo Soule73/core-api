@@ -5,11 +5,13 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Types } from 'mongoose';
 import OpenAI from 'openai';
 import { DataSourcesService } from '../datasources/datasources.service';
 import { DataFetcherService } from '../processing/services/data-fetcher.service';
 import { SchemaAnalyzerService } from '../processing/schema-analyzer/schema-analyzer.service';
 import { AIConversationsService } from '../ai-conversations/ai-conversations.service';
+import { GeneratedWidgetSummaryResponse } from '../ai-conversations/interfaces';
 import { WidgetsService } from '../widgets/widgets.service';
 import {
   PromptBuilderService,
@@ -17,7 +19,7 @@ import {
 } from './prompt-builder.service';
 import { WidgetConfigValidatorService } from './widget-config-validator.service';
 import { GenerateWidgetDto } from './dto';
-import { AIGenerationResult } from './interfaces';
+import { AIGenerationResult, ParsedWidgetConfig } from './interfaces';
 import { WidgetResponse } from '../widgets/interfaces';
 
 const MAX_DATA_ROWS_FOR_ANALYSIS = 500;
@@ -52,7 +54,11 @@ export class AIService {
   /**
    * Generates one or more widgets based on the user's prompt and data source.
    * Orchestrates: data fetch → schema analysis → prompt build → OpenAI call →
-   * config validation → widget creation → conversation update.
+   * config validation → widget create/update → conversation update.
+   *
+   * On the first turn, the conversation title is auto-generated from the AI response.
+   * On subsequent turns, all previously generated widgets are injected into the AI context
+   * so the AI can modify them without hallucinating.
    *
    * @param userId - Authenticated user ID
    * @param dto - Generation request with dataSourceId, userPrompt, optional conversationId, maxWidgets
@@ -89,10 +95,15 @@ export class AIService {
       dataSource.name,
     );
 
+    const isFirstTurn = conversation.messages.length === 0;
+
     const conversationHistory = conversation.messages.map((m) => ({
       role: m.role,
       content: m.content,
     }));
+
+    const previousWidgets: GeneratedWidgetSummaryResponse[] =
+      conversation.generatedWidgets ?? [];
 
     const maxWidgets = dto.maxWidgets ?? DEFAULT_MAX_WIDGETS;
     const systemPrompt = this.promptBuilderService.buildSystemPrompt();
@@ -101,6 +112,7 @@ export class AIService {
       schemaAnalysis,
       maxWidgets,
       conversationHistory,
+      previousWidgets,
     );
 
     const aiModel = this.configService.get<string>(
@@ -120,7 +132,7 @@ export class AIService {
       availableColumns,
     );
 
-    const createdWidgets = await this.createWidgets(
+    const resultWidgets = await this.createOrUpdateWidgets(
       userId,
       dto,
       conversation._id,
@@ -135,20 +147,32 @@ export class AIService {
     const aiMessage =
       typeof rawResponse.aiMessage === 'string'
         ? rawResponse.aiMessage
-        : `Generated ${createdWidgets.length} widget(s) from your data.`;
+        : `Generated ${resultWidgets.length} widget(s) from your data.`;
+
+    const widgetSummaries: GeneratedWidgetSummaryResponse[] = resultWidgets.map(
+      (w) => ({
+        widgetId: w._id,
+        type: w.type,
+        title: w.title,
+        config: w.config,
+      }),
+    );
 
     await this.updateConversationAfterGeneration(
       conversation._id,
       userId,
       dto.userPrompt,
       aiMessage,
-      createdWidgets.length,
+      resultWidgets.length,
       schemaAnalysis,
       rawResponse,
+      isFirstTurn,
+      conversationTitle,
+      widgetSummaries,
     );
 
     return {
-      widgets: createdWidgets,
+      widgets: resultWidgets,
       conversationId: conversation._id,
       conversationTitle,
       aiMessage,
@@ -240,22 +264,39 @@ export class AIService {
     );
   }
 
-  private async createWidgets(
+  private async createOrUpdateWidgets(
     userId: string,
     dto: GenerateWidgetDto,
     conversationId: string,
-    validatedWidgets: Array<{
-      type: string;
-      title: string;
-      description?: string;
-      reasoning?: string;
-      confidence?: number;
-      config: Record<string, unknown>;
-    }>,
+    validatedWidgets: ParsedWidgetConfig[],
   ): Promise<WidgetResponse[]> {
-    const created: WidgetResponse[] = [];
+    const results: WidgetResponse[] = [];
 
     for (const validated of validatedWidgets) {
+      const isModification =
+        !!validated.modifyWidgetId &&
+        Types.ObjectId.isValid(validated.modifyWidgetId);
+
+      if (isModification) {
+        try {
+          const updated = await this.widgetsService.update(
+            validated.modifyWidgetId!,
+            userId,
+            {
+              title: validated.title,
+              config: validated.config,
+              description: validated.description,
+            },
+          );
+          results.push(updated);
+          continue;
+        } catch (error) {
+          this.logger.warn(
+            `Could not update widget ${validated.modifyWidgetId}, creating new one instead: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+
       const widget = await this.widgetsService.create(userId, {
         title: validated.title,
         type: validated.type as never,
@@ -270,10 +311,10 @@ export class AIService {
         confidence: validated.confidence,
       });
 
-      created.push(widget);
+      results.push(widget);
     }
 
-    return created;
+    return results;
   }
 
   private async updateConversationAfterGeneration(
@@ -292,6 +333,9 @@ export class AIService {
       }>;
     },
     rawResponse: Record<string, unknown>,
+    isFirstTurn: boolean,
+    conversationTitle: string,
+    widgetSummaries: GeneratedWidgetSummaryResponse[],
   ): Promise<void> {
     try {
       await this.aiConversationsService.addMessage(conversationId, userId, {
@@ -305,7 +349,7 @@ export class AIService {
         widgetsGenerated: widgetsCount,
       });
 
-      await this.aiConversationsService.update(conversationId, userId, {
+      const updatePayload: Record<string, unknown> = {
         dataSourceSummary: {
           totalRows: schemaAnalysis.rowCount,
           columns: schemaAnalysis.columns.map((c) => ({
@@ -318,7 +362,25 @@ export class AIService {
         suggestions: Array.isArray(rawResponse.suggestions)
           ? (rawResponse.suggestions as string[])
           : [],
-      });
+      };
+
+      if (isFirstTurn) {
+        updatePayload.title = conversationTitle;
+      }
+
+      await this.aiConversationsService.update(
+        conversationId,
+        userId,
+        updatePayload as never,
+      );
+
+      if (widgetSummaries.length > 0) {
+        await this.aiConversationsService.appendGeneratedWidgets(
+          conversationId,
+          userId,
+          widgetSummaries,
+        );
+      }
     } catch (error) {
       this.logger.error(
         'Failed to update conversation after generation',

@@ -10,14 +10,19 @@ import {
   UpdateAIConversationDto,
   AddMessageDto,
 } from './dto';
-import { AIConversationResponse } from './interfaces';
+import {
+  AIConversationResponse,
+  GeneratedWidgetSummaryResponse,
+} from './interfaces';
 
 @Injectable()
 export class AIConversationsService {
   constructor(
     @InjectModel(AIConversation.name)
     private aiConversationModel: Model<AIConversationDocument>,
-  ) {}
+  ) {
+    //
+  }
 
   async create(
     userId: string,
@@ -139,6 +144,39 @@ export class AIConversationsService {
     await this.aiConversationModel.findByIdAndDelete(id);
   }
 
+  /**
+   * Appends new widget summaries to the conversation's generatedWidgets array.
+   * Used after AI generation to persist context for future conversation turns.
+   *
+   * @param id - Conversation ID
+   * @param userId - Owner user ID
+   * @param widgetSummaries - Summaries of newly generated widgets
+   */
+  async appendGeneratedWidgets(
+    id: string,
+    userId: string,
+    widgetSummaries: GeneratedWidgetSummaryResponse[],
+  ): Promise<void> {
+    const conversation = await this.aiConversationModel.findById(id);
+
+    if (!conversation || conversation.userId.toString() !== userId) {
+      return;
+    }
+
+    await this.aiConversationModel.findByIdAndUpdate(id, {
+      $push: {
+        generatedWidgets: {
+          $each: widgetSummaries.map((w) => ({
+            widgetId: new Types.ObjectId(w.widgetId),
+            type: w.type,
+            title: w.title,
+            config: w.config,
+          })),
+        },
+      },
+    });
+  }
+
   private buildConversationResponse(
     conversation: AIConversationDocument,
   ): AIConversationResponse {
@@ -151,6 +189,12 @@ export class AIConversationsService {
       messages: conversation.messages || [],
       dataSourceSummary: conversation.dataSourceSummary,
       suggestions: conversation.suggestions,
+      generatedWidgets: (conversation.generatedWidgets || []).map((w) => ({
+        widgetId: w.widgetId.toString(),
+        type: w.type,
+        title: w.title,
+        config: w.config,
+      })),
     };
   }
 }

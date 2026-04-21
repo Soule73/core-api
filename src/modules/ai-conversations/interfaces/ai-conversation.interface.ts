@@ -1,3 +1,10 @@
+export interface GeneratedWidgetSummaryResponse {
+  widgetId: string;
+  type: string;
+  title: string;
+  config: Record<string, unknown>;
+}
+
 export interface AIMessageResponse {
   role: string;
   content: string;
@@ -26,6 +33,7 @@ export interface AIConversationResponse {
   messages: AIMessageResponse[];
   dataSourceSummary?: DataSourceSummaryResponse;
   suggestions?: string[];
+  generatedWidgets?: GeneratedWidgetSummaryResponse[];
   createdAt?: Date;
   updatedAt?: Date;
 }

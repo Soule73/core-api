@@ -5,9 +5,32 @@ import {
   ValidateNested,
   IsEnum,
   IsNumber,
+  IsMongoId,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+
+class GeneratedWidgetSummaryDto {
+  @ApiProperty({
+    description: 'Widget MongoDB ID',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @IsMongoId()
+  widgetId!: string;
+
+  @ApiProperty({ description: 'Widget type', example: 'bar' })
+  @IsString()
+  type!: string;
+
+  @ApiProperty({ description: 'Widget title', example: 'Sales by Region' })
+  @IsString()
+  title!: string;
+
+  @ApiProperty({ description: 'Widget config object' })
+  @IsObject()
+  config!: Record<string, unknown>;
+}
 
 class AIMessageDto {
   @ApiProperty({
@@ -124,4 +147,15 @@ export class UpdateAIConversationDto {
   @ValidateNested()
   @Type(() => DataSourceSummaryDto)
   dataSourceSummary?: DataSourceSummaryDto;
+
+  @ApiProperty({
+    description: 'Widgets generated in this conversation',
+    type: [GeneratedWidgetSummaryDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GeneratedWidgetSummaryDto)
+  generatedWidgets?: GeneratedWidgetSummaryDto[];
 }

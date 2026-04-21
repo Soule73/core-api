@@ -3,6 +3,7 @@ import {
   ColumnStats,
   SchemaAnalysisResult,
 } from '../processing/schema-analyzer/interfaces';
+import { GeneratedWidgetSummaryResponse } from '../ai-conversations/interfaces';
 
 export const OPENAI_MAX_TOKENS = 16000;
 
@@ -48,6 +49,23 @@ NEVER invent filter values. Use EXACTLY the values provided.
 ### RULE 7 — Metric filter format: exactly 3 required fields
 {"field": "<column>", "operator": "<operator>", "value": "<value>"}
 Any filter missing one of these 3 fields is INVALID.
+
+### RULE 8 — Widget modification requires modifyWidgetId
+When the user asks to MODIFY, UPDATE, CHANGE or EDIT a widget already created in this conversation:
+- You MUST include "modifyWidgetId": "<existing widget ID>" in the widget object
+- Use ONLY widget IDs provided in the "PREVIOUSLY GENERATED WIDGETS" section
+- NEVER invent widget IDs — if you are unsure which widget to modify, create a new one (omit modifyWidgetId)
+- A modification replaces the widget config in-place; the widget keeps its position on the dashboard
+
+### RULE 9 — Multi-turn conversation discipline (anti-hallucination)
+In a multi-turn conversation:
+- Read "PREVIOUS CONVERSATION CONTEXT" and "PREVIOUSLY GENERATED WIDGETS" before answering
+- Do NOT recreate widgets that already exist unless explicitly asked
+- When the user says "that chart", "the bar chart", "the KPI", etc. — identify it from PREVIOUSLY GENERATED WIDGETS
+- Keep your aiMessage conversational: acknowledge what you changed or created, and why
+- Never mention column names or widget types that do not appear in the data
+- If you cannot identify which widget the user refers to, create a new one and mention it in aiMessage
+- Always answer in the same language as the user's request
 
 ---
 
@@ -228,19 +246,50 @@ Use when: showing detailed records, exact values, or when no aggregation is need
 
 ### radar — Radar/spider chart for multi-criteria comparison
 Use when: comparing multiple numeric dimensions simultaneously per category.
+Two modes supported:
+
+Mode A — Global aggregation (metrics as axes): Each metric defines one axis. Use when comparing aggregated values across different metrics.
 {
   "type": "radar",
   "config": {
-    "metrics": [{"field": "perf", "agg": "avg", "label": "Performance", "fields": ["score", "quality", "speed"]}],
-    "buckets": [{"field": "category", "type": "terms"}],
+    "metrics": [
+      {"field": "score", "agg": "avg", "label": "Quality"},
+      {"field": "speed", "agg": "avg", "label": "Speed"},
+      {"field": "reliability", "agg": "avg", "label": "Reliability"}
+    ],
+    "buckets": [],
     "globalFilters": [],
-    "metricStyles": [{"color": "#6366f1", "label": "Performance", "borderColor": "#4f46e5", "borderWidth": 2, "opacity": 0.25, "fill": true, "pointStyle": "circle"}],
+    "metricStyles": [
+      {"color": "#6366f1", "label": "Quality", "borderColor": "#4f46e5", "borderWidth": 2, "opacity": 0.25, "fill": true},
+      {"color": "#f59e42", "label": "Speed", "borderColor": "#d97706", "borderWidth": 2, "opacity": 0.25, "fill": true},
+      {"color": "#10b981", "label": "Reliability", "borderColor": "#059669", "borderWidth": 2, "opacity": 0.25, "fill": true}
+    ],
     "widgetParams": {
-      "title": "Multi-criteria Analysis",
+      "title": "Performance Overview",
       "legend": true,
-      "legendPosition": "top",
-      "pointRadius": 4,
-      "pointHoverRadius": 6
+      "legendPosition": "top"
+    }
+  }
+}
+
+Mode B — GroupBy (one polygon per category): Use a bucket to split data into groups; each group becomes a polygon. Use when comparing the same set of metrics across different categories.
+{
+  "type": "radar",
+  "config": {
+    "metrics": [
+      {"field": "score", "agg": "avg", "label": "Score"},
+      {"field": "reliability", "agg": "avg", "label": "Reliability"}
+    ],
+    "buckets": [{"field": "region", "type": "terms"}],
+    "globalFilters": [],
+    "metricStyles": [
+      {"color": "#6366f1", "label": "Score", "borderColor": "#4f46e5", "borderWidth": 2, "opacity": 0.25, "fill": true},
+      {"color": "#f59e42", "label": "Reliability", "borderColor": "#d97706", "borderWidth": 2, "opacity": 0.25, "fill": true}
+    ],
+    "widgetParams": {
+      "title": "Regional Performance",
+      "legend": true,
+      "legendPosition": "top"
     }
   }
 }
@@ -323,12 +372,13 @@ Use when: visualizing three variables simultaneously (position + size).
 
 Return a single JSON object with this exact structure:
 {
-  "conversationTitle": "<short title summarizing what was generated>",
-  "aiMessage": "<friendly explanation of what was generated and why>",
+  "conversationTitle": "<short title summarizing what was generated — max 8 words>",
+  "aiMessage": "<friendly explanation of what was generated and why, in the same language as the user's request>",
   "widgets": [
     {
       "type": "<widget_type>",
       "title": "<widget title>",
+      "modifyWidgetId": "<OPTIONAL: ID of an existing widget to update — only include when modifying a previous widget>",
       "config": {
         "metrics": [...],
         "buckets": [...],
@@ -339,7 +389,7 @@ Return a single JSON object with this exact structure:
     }
   ],
   "suggestions": [
-    "<suggestion for another widget or analysis>",
+    "<suggestion for another widget or analysis — in the same language as the user>",
     "<another suggestion>"
   ]
 }
@@ -349,8 +399,12 @@ IMPORTANT:
 - Each widget in the array must have "type", "title", and "config"
 - "config" MUST contain: "metrics", "buckets", "globalFilters", "metricStyles", "widgetParams"
 - "suggestions" MUST be an array of 2-3 strings
+- "modifyWidgetId" is OPTIONAL — only include it when the user explicitly asks to modify an existing widget
 - Never return a flat widget object — always wrap in the response structure above
+- "conversationTitle" must be in English for database consistency
+- "aiMessage" and "suggestions" must be in the same language as the user's request
 `;
+
 @Injectable()
 export class PromptBuilderService {
   /**
@@ -370,6 +424,7 @@ export class PromptBuilderService {
    * @param analysisResult - Schema analysis result with column metadata
    * @param maxWidgets - Number of widgets to generate
    * @param conversationHistory - Previous messages from the conversation
+   * @param previousWidgets - Widgets already generated in this conversation (for modification context)
    * @returns User prompt string with full context
    */
   buildUserPrompt(
@@ -377,6 +432,7 @@ export class PromptBuilderService {
     analysisResult: SchemaAnalysisResult,
     maxWidgets: number,
     conversationHistory: Array<{ role: string; content: string }>,
+    previousWidgets: GeneratedWidgetSummaryResponse[] = [],
   ): string {
     const numericColumns = this.extractNumericColumns(analysisResult);
     const categoricalColumns =
@@ -391,9 +447,11 @@ export class PromptBuilderService {
     const categoricalValuesSection =
       this.buildCategoricalValuesSection(categoricalColumns);
     const historySection = this.buildHistorySection(conversationHistory);
+    const generatedWidgetsSection =
+      this.buildGeneratedWidgetsSection(previousWidgets);
     const objectivesSection = this.buildObjectivesSection(maxWidgets);
 
-    return `${historySection}## DATA SOURCE INFORMATION
+    return `${historySection}${generatedWidgetsSection}## DATA SOURCE INFORMATION
 - Total rows: ${analysisResult.rowCount}
 
 ${columnsSection}
@@ -455,6 +513,37 @@ ${lines}`;
       .join('\n');
 
     return `## PREVIOUS CONVERSATION CONTEXT\n${historyText}\n\n`;
+  }
+
+  /**
+   * Builds the section listing widgets already generated in the current conversation.
+   * This section enables the AI to modify specific existing widgets using their IDs.
+   *
+   * @param widgets - Widgets generated in previous turns of this conversation
+   */
+  private buildGeneratedWidgetsSection(
+    widgets: GeneratedWidgetSummaryResponse[],
+  ): string {
+    if (widgets.length === 0) {
+      return '';
+    }
+
+    const lines = widgets.map((w, i) => {
+      const configSummary = JSON.stringify({
+        metrics: w.config.metrics,
+        buckets: w.config.buckets,
+        widgetParams: w.config.widgetParams,
+      });
+      return `${i + 1}. [${w.type}] "${w.title}" — ID: ${w.widgetId}\n   Config summary: ${configSummary}`;
+    });
+
+    return `## PREVIOUSLY GENERATED WIDGETS IN THIS CONVERSATION
+CRITICAL: Use these IDs in "modifyWidgetId" ONLY if the user explicitly asks to modify one of these widgets.
+NEVER invent widget IDs. Use ONLY the IDs listed below.
+
+${lines.join('\n\n')}
+
+`;
   }
 
   private buildObjectivesSection(maxWidgets: number): string {

@@ -4,6 +4,21 @@ import { Document, Types } from 'mongoose';
 export type AIConversationDocument = AIConversation & Document;
 
 @Schema({ _id: false })
+export class GeneratedWidgetSummary {
+  @Prop({ type: Types.ObjectId, ref: 'Widget', required: true })
+  widgetId!: Types.ObjectId;
+
+  @Prop({ required: true })
+  type!: string;
+
+  @Prop({ required: true })
+  title!: string;
+
+  @Prop({ type: Object })
+  config!: Record<string, unknown>;
+}
+
+@Schema({ _id: false })
 export class AIMessage {
   @Prop({ enum: ['user', 'assistant'], required: true })
   role!: string;
@@ -66,6 +81,9 @@ export class AIConversation {
 
   @Prop({ type: [String] })
   suggestions?: string[];
+
+  @Prop({ type: [raw(GeneratedWidgetSummary)], default: [] })
+  generatedWidgets!: GeneratedWidgetSummary[];
 }
 
 export const AIConversationSchema =

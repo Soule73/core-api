@@ -11,6 +11,7 @@ export interface AIGenerationResult {
 export interface ParsedWidgetConfig {
   type: string;
   title: string;
+  modifyWidgetId?: string;
   description?: string;
   reasoning?: string;
   confidence?: number;
