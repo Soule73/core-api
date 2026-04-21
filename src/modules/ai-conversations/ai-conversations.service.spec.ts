@@ -7,6 +7,7 @@ import { AIConversation } from './schemas/ai-conversation.schema';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
+const mockOtherUserId = '507f1f77bcf86cd799439099';
 const mockConversationId = '507f1f77bcf86cd799439012';
 const mockDataSourceId = '507f1f77bcf86cd799439013';
 
@@ -27,6 +28,7 @@ const mockConversationModel = {
   findById: vi.fn(),
   findByIdAndUpdate: vi.fn(),
   findByIdAndDelete: vi.fn(),
+  updateOne: vi.fn(),
   create: vi.fn(),
 };
 
@@ -244,6 +246,77 @@ describe('AIConversationsService', () => {
 
       await expect(
         service.remove(mockConversationId, 'otherUserId'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('appendGeneratedWidgets', () => {
+    const mockWidgetSummaries = [
+      {
+        widgetId: '507f1f77bcf86cd799439020',
+        type: 'bar',
+        title: 'Sales by Region',
+        config: { metrics: [], buckets: [], widgetParams: {} },
+      },
+    ];
+
+    it('should upsert widget summaries into the conversation', async () => {
+      mockConversationModel.updateOne.mockResolvedValue({ matchedCount: 1 });
+
+      await expect(
+        service.appendGeneratedWidgets(
+          mockConversationId,
+          mockUserId,
+          mockWidgetSummaries,
+        ),
+      ).resolves.not.toThrow();
+
+      expect(mockConversationModel.updateOne).toHaveBeenCalledTimes(2);
+    });
+
+    it('should perform $pull before $push to de-duplicate by widgetId', async () => {
+      mockConversationModel.updateOne.mockResolvedValue({ matchedCount: 1 });
+
+      await service.appendGeneratedWidgets(
+        mockConversationId,
+        mockUserId,
+        mockWidgetSummaries,
+      );
+
+      const firstCallUpdate = mockConversationModel.updateOne.mock.calls[0][1];
+      expect(firstCallUpdate).toHaveProperty('$pull');
+
+      const secondCallUpdate = mockConversationModel.updateOne.mock.calls[1][1];
+      expect(secondCallUpdate).toHaveProperty('$push');
+    });
+
+    it('should throw NotFoundException when conversation does not exist', async () => {
+      mockConversationModel.updateOne.mockResolvedValueOnce({
+        matchedCount: 0,
+      });
+
+      await expect(
+        service.appendGeneratedWidgets(
+          'invalidId',
+          mockUserId,
+          mockWidgetSummaries,
+        ),
+      ).rejects.toThrow(NotFoundException);
+
+      expect(mockConversationModel.updateOne).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw NotFoundException when user does not own the conversation', async () => {
+      mockConversationModel.updateOne.mockResolvedValueOnce({
+        matchedCount: 0,
+      });
+
+      await expect(
+        service.appendGeneratedWidgets(
+          mockConversationId,
+          mockOtherUserId,
+          mockWidgetSummaries,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });

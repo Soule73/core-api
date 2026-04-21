@@ -69,6 +69,8 @@ export class WidgetConfigValidatorService {
     return {
       type: raw.type as string,
       title: (raw.title as string) || 'Generated Widget',
+      modifyWidgetId:
+        typeof raw.modifyWidgetId === 'string' ? raw.modifyWidgetId : undefined,
       description: raw.description as string | undefined,
       reasoning: raw.reasoning as string | undefined,
       confidence: this.parseConfidence(raw.confidence),
