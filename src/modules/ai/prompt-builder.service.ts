@@ -518,6 +518,7 @@ ${lines}`;
   /**
    * Builds the section listing widgets already generated in the current conversation.
    * This section enables the AI to modify specific existing widgets using their IDs.
+   * Capped to the last 10 widgets; config summaries are truncated to avoid context bloat.
    *
    * @param widgets - Widgets generated in previous turns of this conversation
    */
@@ -528,12 +529,21 @@ ${lines}`;
       return '';
     }
 
-    const lines = widgets.map((w, i) => {
-      const configSummary = JSON.stringify({
+    const MAX_WIDGETS_IN_PROMPT = 10;
+    const MAX_CONFIG_CHARS = 300;
+
+    const recentWidgets = widgets.slice(-MAX_WIDGETS_IN_PROMPT);
+
+    const lines = recentWidgets.map((w, i) => {
+      const raw = JSON.stringify({
         metrics: w.config.metrics,
         buckets: w.config.buckets,
         widgetParams: w.config.widgetParams,
       });
+      const configSummary =
+        raw.length > MAX_CONFIG_CHARS
+          ? `${raw.slice(0, MAX_CONFIG_CHARS)}...`
+          : raw;
       return `${i + 1}. [${w.type}] "${w.title}" — ID: ${w.widgetId}\n   Config summary: ${configSummary}`;
     });
 

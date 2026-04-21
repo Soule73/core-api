@@ -145,36 +145,48 @@ export class AIConversationsService {
   }
 
   /**
-   * Appends new widget summaries to the conversation's generatedWidgets array.
-   * Used after AI generation to persist context for future conversation turns.
+   * Upserts widget summaries in the conversation's generatedWidgets array.
+   * Existing entries with the same widgetId are replaced to avoid duplicates.
+   * Ownership is enforced atomically — throws NotFoundException if the conversation
+   * does not exist or is not owned by the user.
    *
    * @param id - Conversation ID
    * @param userId - Owner user ID
-   * @param widgetSummaries - Summaries of newly generated widgets
+   * @param widgetSummaries - Summaries to upsert (created or updated this turn)
    */
   async appendGeneratedWidgets(
     id: string,
     userId: string,
     widgetSummaries: GeneratedWidgetSummaryResponse[],
   ): Promise<void> {
-    const conversation = await this.aiConversationModel.findById(id);
+    const widgetObjectIds = widgetSummaries.map(
+      (w) => new Types.ObjectId(w.widgetId),
+    );
 
-    if (!conversation || conversation.userId.toString() !== userId) {
-      return;
+    const pullResult = await this.aiConversationModel.updateOne(
+      { _id: id, userId: new Types.ObjectId(userId) },
+      { $pull: { generatedWidgets: { widgetId: { $in: widgetObjectIds } } } },
+    );
+
+    if (pullResult.matchedCount === 0) {
+      throw new NotFoundException('Conversation not found');
     }
 
-    await this.aiConversationModel.findByIdAndUpdate(id, {
-      $push: {
-        generatedWidgets: {
-          $each: widgetSummaries.map((w) => ({
-            widgetId: new Types.ObjectId(w.widgetId),
-            type: w.type,
-            title: w.title,
-            config: w.config,
-          })),
+    await this.aiConversationModel.updateOne(
+      { _id: id, userId: new Types.ObjectId(userId) },
+      {
+        $push: {
+          generatedWidgets: {
+            $each: widgetSummaries.map((w) => ({
+              widgetId: new Types.ObjectId(w.widgetId),
+              type: w.type,
+              title: w.title,
+              config: w.config,
+            })),
+          },
         },
       },
-    });
+    );
   }
 
   private buildConversationResponse(

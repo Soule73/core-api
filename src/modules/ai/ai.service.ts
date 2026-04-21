@@ -132,17 +132,22 @@ export class AIService {
       availableColumns,
     );
 
+    const knownWidgetIds = new Set(previousWidgets.map((w) => w.widgetId));
+
     const resultWidgets = await this.createOrUpdateWidgets(
       userId,
       dto,
       conversation._id,
       validatedWidgets,
+      knownWidgetIds,
     );
 
-    const conversationTitle =
+    const openAiTitle =
       typeof rawResponse.conversationTitle === 'string'
         ? rawResponse.conversationTitle
         : `AI generation — ${dataSource.name}`;
+
+    const conversationTitle = isFirstTurn ? openAiTitle : conversation.title;
 
     const aiMessage =
       typeof rawResponse.aiMessage === 'string'
@@ -167,7 +172,7 @@ export class AIService {
       schemaAnalysis,
       rawResponse,
       isFirstTurn,
-      conversationTitle,
+      openAiTitle,
       widgetSummaries,
     );
 
@@ -269,13 +274,15 @@ export class AIService {
     dto: GenerateWidgetDto,
     conversationId: string,
     validatedWidgets: ParsedWidgetConfig[],
+    knownWidgetIds: Set<string>,
   ): Promise<WidgetResponse[]> {
     const results: WidgetResponse[] = [];
 
     for (const validated of validatedWidgets) {
       const isModification =
         !!validated.modifyWidgetId &&
-        Types.ObjectId.isValid(validated.modifyWidgetId);
+        Types.ObjectId.isValid(validated.modifyWidgetId) &&
+        knownWidgetIds.has(validated.modifyWidgetId);
 
       if (isModification) {
         try {
@@ -334,7 +341,7 @@ export class AIService {
     },
     rawResponse: Record<string, unknown>,
     isFirstTurn: boolean,
-    conversationTitle: string,
+    openAiTitle: string,
     widgetSummaries: GeneratedWidgetSummaryResponse[],
   ): Promise<void> {
     try {
@@ -365,7 +372,7 @@ export class AIService {
       };
 
       if (isFirstTurn) {
-        updatePayload.title = conversationTitle;
+        updatePayload.title = openAiTitle;
       }
 
       await this.aiConversationsService.update(

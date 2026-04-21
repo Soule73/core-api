@@ -14,7 +14,7 @@ export class GeneratedWidgetSummary {
   @Prop({ required: true })
   title!: string;
 
-  @Prop({ type: Object })
+  @Prop({ type: Object, required: true, default: {} })
   config!: Record<string, unknown>;
 }
 
