@@ -260,6 +260,12 @@ export class DashboardsService {
       autoRefreshIntervalValue: dashboard.autoRefreshIntervalValue,
       autoRefreshIntervalUnit: dashboard.autoRefreshIntervalUnit,
       timeRange: dashboard.timeRange,
+      globalFilters: (dashboard.globalFilters || []).map((f) => ({
+        id: f.id,
+        field: f.field,
+        operator: f.operator,
+        value: f.value,
+      })),
     };
   }
 }

@@ -9,6 +9,37 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import type { FilterOperator } from '../../processing/filters';
+import { FILTER_OPERATORS } from '../../processing/filters';
+
+export class DashboardFilterDto {
+  @ApiProperty({
+    description: 'Unique identifier for the filter',
+    example: 'uuid-123',
+  })
+  @IsString()
+  id!: string;
+
+  @ApiProperty({ description: 'Field name to filter on', example: 'status' })
+  @IsString()
+  field!: string;
+
+  @ApiProperty({
+    description: 'Filter operator',
+    example: 'equals',
+    enum: FILTER_OPERATORS,
+  })
+  @IsEnum(FILTER_OPERATORS)
+  operator!: FilterOperator;
+
+  @ApiProperty({
+    description: 'Filter value (not required for is_null / is_not_null)',
+    example: 'active',
+    required: false,
+  })
+  @IsOptional()
+  value?: string | number | boolean | (string | number)[] | null;
+}
 
 class LayoutItemStylesDto {
   @ApiProperty({
@@ -387,4 +418,15 @@ export class CreateDashboardDto {
   @IsOptional()
   @IsBoolean()
   skipValidation?: boolean;
+
+  @ApiProperty({
+    description: 'Global filters applied to all widgets in the dashboard',
+    type: [DashboardFilterDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DashboardFilterDto)
+  globalFilters?: DashboardFilterDto[];
 }

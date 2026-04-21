@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { DashboardFilterDto } from './create-dashboard.dto';
 
 class LayoutItemStylesDto {
   @ApiProperty({
@@ -388,4 +389,15 @@ export class UpdateDashboardDto {
   @ValidateNested()
   @Type(() => DashboardStylesDto)
   styles?: DashboardStylesDto;
+
+  @ApiProperty({
+    description: 'Global filters applied to all widgets in the dashboard',
+    type: [DashboardFilterDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DashboardFilterDto)
+  globalFilters?: DashboardFilterDto[];
 }

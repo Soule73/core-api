@@ -1,3 +1,5 @@
+import type { FilterOperator } from '../../processing/filters';
+
 export interface LayoutItemStylesResponse {
   backgroundColor?: string;
   backgroundGradient?: string;
@@ -42,6 +44,13 @@ export interface DashboardTimeRangeResponse {
   intervalUnit?: string;
 }
 
+export interface DashboardFilterResponse {
+  id: string;
+  field: string;
+  operator: FilterOperator;
+  value?: string | number | boolean | (string | number)[] | null;
+}
+
 export interface DashboardResponse {
   _id: string;
   id: string;
@@ -57,6 +66,7 @@ export interface DashboardResponse {
   autoRefreshIntervalValue?: number;
   autoRefreshIntervalUnit?: string;
   timeRange?: DashboardTimeRangeResponse;
+  globalFilters: DashboardFilterResponse[];
   createdAt?: Date;
   updatedAt?: Date;
 }
