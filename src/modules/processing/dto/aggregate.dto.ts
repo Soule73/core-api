@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { AggregationType } from '../aggregators';
-import type { FilterOperator } from '../filters';
+import { FilterOperator, FILTER_OPERATORS } from '../filters';
 
 export class MetricDto {
   @ApiProperty({ description: 'Field to aggregate' })
@@ -48,40 +48,10 @@ export class FilterDto {
   field!: string;
 
   @ApiProperty({
-    enum: [
-      'equals',
-      'not_equals',
-      'contains',
-      'not_contains',
-      'greater_than',
-      'less_than',
-      'greater_than_or_equal',
-      'less_than_or_equal',
-      'between',
-      'in',
-      'not_in',
-      'regex',
-      'is_null',
-      'is_not_null',
-    ],
+    enum: FILTER_OPERATORS,
     description: 'Filter operator',
   })
-  @IsEnum([
-    'equals',
-    'not_equals',
-    'contains',
-    'not_contains',
-    'greater_than',
-    'less_than',
-    'greater_than_or_equal',
-    'less_than_or_equal',
-    'between',
-    'in',
-    'not_in',
-    'regex',
-    'is_null',
-    'is_not_null',
-  ] as const)
+  @IsEnum(FILTER_OPERATORS)
   operator!: FilterOperator;
 
   @ApiProperty({ description: 'Value to filter with' })
