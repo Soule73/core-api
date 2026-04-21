@@ -9,26 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-
-class DashboardFilterDto {
-  @ApiProperty({
-    description: 'Unique identifier for the filter',
-    example: 'uuid-123',
-  })
-  @IsString()
-  id!: string;
-
-  @ApiProperty({ description: 'Field name to filter on', example: 'status' })
-  @IsString()
-  field!: string;
-
-  @ApiProperty({ description: 'Filter operator', example: 'equals' })
-  @IsString()
-  operator!: string;
-
-  @ApiProperty({ description: 'Filter value', example: 'active' })
-  value!: string | number | boolean | (string | number)[];
-}
+import { DashboardFilterDto } from './create-dashboard.dto';
 
 class LayoutItemStylesDto {
   @ApiProperty({

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+import type { FilterOperator } from '../processing/filters';
 
 export type DashboardDocument = Dashboard & Document;
 
@@ -134,11 +135,30 @@ export class DashboardFilterItem {
   @Prop({ required: true })
   field!: string;
 
-  @Prop({ required: true })
-  operator!: string;
+  @Prop({
+    required: true,
+    type: String,
+    enum: [
+      'equals',
+      'not_equals',
+      'contains',
+      'not_contains',
+      'greater_than',
+      'less_than',
+      'greater_than_or_equal',
+      'less_than_or_equal',
+      'between',
+      'in',
+      'not_in',
+      'regex',
+      'is_null',
+      'is_not_null',
+    ],
+  })
+  operator!: FilterOperator;
 
-  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
-  value!: string | number | boolean | (string | number)[];
+  @Prop({ type: MongooseSchema.Types.Mixed })
+  value?: string | number | boolean | (string | number)[] | null;
 }
 
 @Schema({ timestamps: true })

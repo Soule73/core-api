@@ -367,4 +367,60 @@ describe('DashboardsService', () => {
       expect(result).toHaveLength(0);
     });
   });
+
+  describe('globalFilters mapping', () => {
+    it('should return globalFilters in the response', async () => {
+      const dashboardWithFilters = {
+        ...mockDashboard,
+        globalFilters: [
+          { id: 'f1', field: 'status', operator: 'equals', value: 'active' },
+          { id: 'f2', field: 'count', operator: 'greater_than', value: 10 },
+        ],
+      };
+      mockDashboardModel.findById.mockResolvedValue(dashboardWithFilters);
+
+      const result = await service.findOne(mockDashboardId, mockUserId);
+
+      expect(result.globalFilters).toHaveLength(2);
+      expect(result.globalFilters[0]).toEqual({
+        id: 'f1',
+        field: 'status',
+        operator: 'equals',
+        value: 'active',
+      });
+      expect(result.globalFilters[1]).toEqual({
+        id: 'f2',
+        field: 'count',
+        operator: 'greater_than',
+        value: 10,
+      });
+    });
+
+    it('should return empty globalFilters array when none are set', async () => {
+      mockDashboardModel.findById.mockResolvedValue(mockDashboard);
+
+      const result = await service.findOne(mockDashboardId, mockUserId);
+
+      expect(result.globalFilters).toEqual([]);
+    });
+
+    it('should support null value for is_null operator', async () => {
+      const dashboardWithNullFilter = {
+        ...mockDashboard,
+        globalFilters: [
+          { id: 'f3', field: 'deletedAt', operator: 'is_null', value: null },
+        ],
+      };
+      mockDashboardModel.findById.mockResolvedValue(dashboardWithNullFilter);
+
+      const result = await service.findOne(mockDashboardId, mockUserId);
+
+      expect(result.globalFilters[0]).toEqual({
+        id: 'f3',
+        field: 'deletedAt',
+        operator: 'is_null',
+        value: null,
+      });
+    });
+  });
 });

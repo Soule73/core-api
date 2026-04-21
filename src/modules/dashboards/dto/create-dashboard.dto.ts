@@ -9,8 +9,26 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import type { FilterOperator } from '../../processing/filters';
 
-class DashboardFilterDto {
+export const FILTER_OPERATORS: FilterOperator[] = [
+  'equals',
+  'not_equals',
+  'contains',
+  'not_contains',
+  'greater_than',
+  'less_than',
+  'greater_than_or_equal',
+  'less_than_or_equal',
+  'between',
+  'in',
+  'not_in',
+  'regex',
+  'is_null',
+  'is_not_null',
+];
+
+export class DashboardFilterDto {
   @ApiProperty({
     description: 'Unique identifier for the filter',
     example: 'uuid-123',
@@ -22,12 +40,21 @@ class DashboardFilterDto {
   @IsString()
   field!: string;
 
-  @ApiProperty({ description: 'Filter operator', example: 'equals' })
-  @IsString()
-  operator!: string;
+  @ApiProperty({
+    description: 'Filter operator',
+    example: 'equals',
+    enum: FILTER_OPERATORS,
+  })
+  @IsEnum(FILTER_OPERATORS)
+  operator!: FilterOperator;
 
-  @ApiProperty({ description: 'Filter value', example: 'active' })
-  value!: string | number | boolean | (string | number)[];
+  @ApiProperty({
+    description: 'Filter value (not required for is_null / is_not_null)',
+    example: 'active',
+    required: false,
+  })
+  @IsOptional()
+  value?: string | number | boolean | (string | number)[] | null;
 }
 
 class LayoutItemStylesDto {
