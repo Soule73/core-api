@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
-import {
-  FilterOperator,
-  FILTER_OPERATORS,
-} from '../../processing/filters';
+import { FilterOperator, FILTER_OPERATORS } from '../../processing/filters';
 
 export type DashboardDocument = Dashboard & Document;
 

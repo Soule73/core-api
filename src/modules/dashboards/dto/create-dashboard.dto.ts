@@ -9,10 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  FilterOperator,
-  FILTER_OPERATORS,
-} from '../../processing/filters';
+import { FilterOperator, FILTER_OPERATORS } from '../../processing/filters';
 
 export class DashboardFilterDto {
   @ApiProperty({
