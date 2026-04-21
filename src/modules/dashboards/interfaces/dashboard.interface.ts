@@ -42,6 +42,13 @@ export interface DashboardTimeRangeResponse {
   intervalUnit?: string;
 }
 
+export interface DashboardFilterResponse {
+  id: string;
+  field: string;
+  operator: string;
+  value: string | number | boolean | (string | number)[];
+}
+
 export interface DashboardResponse {
   _id: string;
   id: string;
@@ -57,6 +64,7 @@ export interface DashboardResponse {
   autoRefreshIntervalValue?: number;
   autoRefreshIntervalUnit?: string;
   timeRange?: DashboardTimeRangeResponse;
+  globalFilters: DashboardFilterResponse[];
   createdAt?: Date;
   updatedAt?: Date;
 }

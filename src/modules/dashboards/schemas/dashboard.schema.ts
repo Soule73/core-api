@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
 export type DashboardDocument = Dashboard & Document;
 
@@ -126,6 +126,21 @@ export class DashboardHistoryItem {
   changes?: Record<string, unknown>;
 }
 
+@Schema({ _id: false })
+export class DashboardFilterItem {
+  @Prop({ required: true })
+  id!: string;
+
+  @Prop({ required: true })
+  field!: string;
+
+  @Prop({ required: true })
+  operator!: string;
+
+  @Prop({ type: MongooseSchema.Types.Mixed, required: true })
+  value!: string | number | boolean | (string | number)[];
+}
+
 @Schema({ timestamps: true })
 export class Dashboard {
   @Prop({ required: true })
@@ -163,6 +178,9 @@ export class Dashboard {
 
   @Prop({ type: raw(DashboardStyles) })
   styles?: DashboardStyles;
+
+  @Prop({ type: [raw(DashboardFilterItem)], default: [] })
+  globalFilters!: DashboardFilterItem[];
 }
 
 export const DashboardSchema = SchemaFactory.createForClass(Dashboard);

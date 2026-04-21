@@ -10,6 +10,26 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
+class DashboardFilterDto {
+  @ApiProperty({
+    description: 'Unique identifier for the filter',
+    example: 'uuid-123',
+  })
+  @IsString()
+  id!: string;
+
+  @ApiProperty({ description: 'Field name to filter on', example: 'status' })
+  @IsString()
+  field!: string;
+
+  @ApiProperty({ description: 'Filter operator', example: 'equals' })
+  @IsString()
+  operator!: string;
+
+  @ApiProperty({ description: 'Filter value', example: 'active' })
+  value!: string | number | boolean | (string | number)[];
+}
+
 class LayoutItemStylesDto {
   @ApiProperty({
     description: 'Background color of the layout item',
@@ -388,4 +408,15 @@ export class UpdateDashboardDto {
   @ValidateNested()
   @Type(() => DashboardStylesDto)
   styles?: DashboardStylesDto;
+
+  @ApiProperty({
+    description: 'Global filters applied to all widgets in the dashboard',
+    type: [DashboardFilterDto],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => DashboardFilterDto)
+  globalFilters?: DashboardFilterDto[];
 }
