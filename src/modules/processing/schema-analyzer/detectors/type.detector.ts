@@ -18,6 +18,13 @@ export class TypeDetector {
     if (typeof value === 'boolean') return 'boolean';
     if (typeof value === 'number') return 'number';
     if (Array.isArray(value)) return 'array';
+    if (value instanceof Date) return 'date';
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      '$date' in (value as Record<string, unknown>)
+    )
+      return 'date';
     if (typeof value === 'object') return 'object';
 
     if (typeof value === 'string') {
