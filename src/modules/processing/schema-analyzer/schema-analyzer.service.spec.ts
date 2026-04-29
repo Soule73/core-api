@@ -156,8 +156,12 @@ describe('TypeDetector', () => {
     });
 
     it('should detect MongoDB Extended JSON date objects as date', () => {
-      expect(detector.detectType({ $date: '2026-04-18T03:11:13.303Z' })).toBe('date');
-      expect(detector.detectType({ $date: { $numberLong: '1713408673303' } })).toBe('date');
+      expect(detector.detectType({ $date: '2026-04-18T03:11:13.303Z' })).toBe(
+        'date',
+      );
+      expect(
+        detector.detectType({ $date: { $numberLong: '1713408673303' } }),
+      ).toBe('date');
     });
 
     it('should detect string', () => {

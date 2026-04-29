@@ -56,7 +56,7 @@ describe('AIConversationsService', () => {
       mockConversationModel.create.mockResolvedValue(mockConversation);
 
       const result = await service.create(mockUserId, {
-        userId: mockUserId,
+        // userId: mockUserId,
         dataSourceId: mockDataSourceId,
         title: 'Test Conversation',
       });
@@ -75,7 +75,7 @@ describe('AIConversationsService', () => {
       mockConversationModel.create.mockResolvedValue(conversationWithMessages);
 
       const result = await service.create(mockUserId, {
-        userId: mockUserId,
+        // userId: mockUserId,
         dataSourceId: mockDataSourceId,
         title: 'Test',
         messages: [{ role: 'user', content: 'Hello' }],

@@ -348,10 +348,7 @@ describe('DashboardsService', () => {
 
       expect(result).toHaveLength(1);
       expect(mockDashboardModel.find).toHaveBeenCalledWith({
-        $or: [
-          { 'layout.widgetId': widgetId },
-          { 'layout.widgetId': new Types.ObjectId(widgetId) },
-        ],
+        'layout.widgetId': new Types.ObjectId(widgetId),
         ownerId: new Types.ObjectId(mockUserId),
       });
     });

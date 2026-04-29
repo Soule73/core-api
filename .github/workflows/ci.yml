@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run unit tests
+        run: yarn test --coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-coverage
+          path: coverage/
+          retention-days: 7
+
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27018:27017
+        env:
+          MONGO_INITDB_DATABASE: datavise_test
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+        ports:
+          - 9201:9200
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: 'false'
+          xpack.security.enrollment.enabled: 'false'
+          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+        options: >-
+          --health-cmd "curl -s http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Seed MongoDB test data
+        run: |
+          npm install -g mongosh
+          mongosh "mongodb://localhost:27018/datavise_test" test-fixtures/mongo-init.js
+
+      - name: Install salles-api dependencies and start
+        run: |
+          cd test-fixtures/salles-api
+          npm install
+          node server.js &
+          sleep 2
+
+      - name: Run E2E tests
+        env:
+          MONGODB_URI: mongodb://localhost:27018/datavise_test
+          REDIS_HOST: localhost
+          REDIS_PORT: '6380'
+          ELASTICSEARCH_URL: http://localhost:9201
+          JWT_SECRET: test-jwt-secret-for-e2e-testing
+          JWT_EXPIRES_IN: 1d
+          NODE_ENV: test
+        run: yarn test:e2e

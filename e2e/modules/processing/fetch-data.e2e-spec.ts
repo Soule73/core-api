@@ -160,7 +160,18 @@ describe('Processing - Fetch Data (E2E)', () => {
         );
 
         expect(secondResponse.status).toBe(200);
-        expect(secondResponse.body).toEqual(firstResponse.body);
+        // Normalize ISO date strings before comparing (Redis cache may serialize
+        // "2026-01-15T14:00:00Z" as "2026-01-15T14:00:00.000Z")
+        const normalize = (obj: unknown): unknown =>
+          JSON.parse(
+            JSON.stringify(obj).replace(
+              /(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})Z/g,
+              '$1.000Z',
+            ),
+          );
+        expect(normalize(secondResponse.body)).toEqual(
+          normalize(firstResponse.body),
+        );
       }
     });
 

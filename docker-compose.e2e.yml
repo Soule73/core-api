@@ -1,5 +1,5 @@
 services:
-  core-api:
+  core-api-e2e:
     build:
       context: .
       dockerfile: Dockerfile.dev

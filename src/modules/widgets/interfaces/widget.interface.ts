@@ -15,4 +15,5 @@ export interface WidgetResponse {
   confidence?: number;
   createdAt?: Date;
   updatedAt?: Date;
+  replacesWidgetId?: string;
 }

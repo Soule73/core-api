@@ -16,6 +16,11 @@ export default defineConfig({
         root: './',
         include: ['e2e/**/*.e2e-spec.ts'],
         setupFiles: ['./e2e/setup.ts'],
+        env: {
+            REDIS_HOST: 'localhost',
+            REDIS_PORT: '6380',
+            MONGODB_URI: 'mongodb://localhost:27018/datavise_test',
+        },
         testTimeout: 30000,
         hookTimeout: 60000,
         teardownTimeout: 15000,

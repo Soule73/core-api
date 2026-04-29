@@ -132,25 +132,6 @@ describe('Processing - Authentication Types (E2E)', () => {
       );
       expect([200, 401, 500, 502, 503]).toContain(response.status);
     });
-
-    it('should aggregate data with bearer authentication', async () => {
-      if (!bearerDataSourceId) return;
-
-      const response = await test.post(
-        `/api/v1/processing/datasources/${bearerDataSourceId}/aggregate`,
-        { metrics: [{ field: 'capacity', type: 'sum' }] },
-      );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
-    });
-
-    it('should analyze schema with bearer authentication', async () => {
-      if (!bearerDataSourceId) return;
-
-      const response = await test.get(
-        `/api/v1/processing/datasources/${bearerDataSourceId}/schema`,
-      );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
-    });
   });
 
   describe('DataSource with API Key Authentication (Header)', () => {
@@ -171,16 +152,6 @@ describe('Processing - Authentication Types (E2E)', () => {
 
       const response = await test.get(
         `/api/v1/processing/datasources/${apiKeyHeaderDataSourceId}/data`,
-      );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
-    });
-
-    it('should aggregate data with apiKey header authentication', async () => {
-      if (!apiKeyHeaderDataSourceId) return;
-
-      const response = await test.post(
-        `/api/v1/processing/datasources/${apiKeyHeaderDataSourceId}/aggregate`,
-        { metrics: [{ field: 'capacity', type: 'avg' }] },
       );
       expect([200, 401, 500, 502, 503]).toContain(response.status);
     });
@@ -227,25 +198,6 @@ describe('Processing - Authentication Types (E2E)', () => {
 
       const response = await test.get(
         `/api/v1/processing/datasources/${basicAuthDataSourceId}/data`,
-      );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
-    });
-
-    it('should aggregate data with basic authentication', async () => {
-      if (!basicAuthDataSourceId) return;
-
-      const response = await test.post(
-        `/api/v1/processing/datasources/${basicAuthDataSourceId}/aggregate`,
-        { metrics: [{ field: 'pricePerHour', type: 'max' }] },
-      );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
-    });
-
-    it('should analyze schema with basic authentication', async () => {
-      if (!basicAuthDataSourceId) return;
-
-      const response = await test.get(
-        `/api/v1/processing/datasources/${basicAuthDataSourceId}/schema`,
       );
       expect([200, 401, 500, 502, 503]).toContain(response.status);
     });

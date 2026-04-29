@@ -53,17 +53,17 @@ import {
           return { ttl: config.get<number>('redis.ttl', 300000) };
         }
 
-        const tlsEnabled = config.get<boolean>('redis.tls', false);
+        const tlsEnabled = process.env.REDIS_TLS === 'true';
         const store = await redisStore({
-          host: config.get<string>('redis.host', 'localhost'),
-          port: config.get<number>('redis.port', 6379),
-          password: config.get<string | undefined>('redis.password'),
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          password: process.env.REDIS_PASSWORD || undefined,
           tls: tlsEnabled ? {} : undefined,
         });
 
         return {
           store: store as unknown as CacheStore,
-          ttl: config.get<number>('redis.ttl', 300000),
+          ttl: parseInt(process.env.REDIS_TTL || '300000', 10),
         };
       },
     }),

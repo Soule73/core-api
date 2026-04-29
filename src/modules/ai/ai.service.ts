@@ -318,6 +318,10 @@ export class AIService {
         confidence: validated.confidence,
       });
 
+      if (validated.modifyWidgetId) {
+        widget.replacesWidgetId = validated.modifyWidgetId;
+      }
+
       results.push(widget);
     }
 
