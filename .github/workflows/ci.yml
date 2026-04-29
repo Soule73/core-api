@@ -18,7 +18,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'yarn'
 
       - name: Install dependencies
@@ -70,12 +70,13 @@ jobs:
           discovery.type: single-node
           xpack.security.enabled: 'false'
           xpack.security.enrollment.enabled: 'false'
-          ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+          ES_JAVA_OPTS: '-Xms256m -Xmx256m'
         options: >-
-          --health-cmd "curl -s http://localhost:9200/_cluster/health | grep -q 'green\\|yellow'"
+          --health-cmd "curl -f http://localhost:9200/_cluster/health"
           --health-interval 15s
           --health-timeout 10s
-          --health-retries 10
+          --health-retries 15
+          --health-start-period 60s
 
     steps:
       - name: Checkout
@@ -84,7 +85,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'yarn'
 
       - name: Install dependencies
