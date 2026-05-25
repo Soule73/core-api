@@ -63,6 +63,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const { user, token } = await this.authService.register(registerDto);
+    res.setHeader('Cache-Control', 'no-store');
     res.cookie('access_token', token, COOKIE_OPTIONS);
     return { user };
   }
@@ -86,6 +87,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
     const { user, token } = await this.authService.login(loginDto);
+    res.setHeader('Cache-Control', 'no-store');
     res.cookie('access_token', token, COOKIE_OPTIONS);
     return { user };
   }
