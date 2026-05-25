@@ -54,8 +54,15 @@ describe('Auth Module (E2E)', () => {
 
       expect(response.status).toBe(201);
       const body = response.body as AuthResponse;
-      const setCookie = response.headers['set-cookie'] as string[] | string | undefined;
-      const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
+      const setCookie = response.headers['set-cookie'] as
+        | string[]
+        | string
+        | undefined;
+      const cookies = Array.isArray(setCookie)
+        ? setCookie
+        : setCookie
+          ? [setCookie]
+          : [];
       expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
       expect(body).toHaveProperty('user');
       expect(body.user).toHaveProperty('email', 'authnewuser@test.com');
@@ -100,8 +107,15 @@ describe('Auth Module (E2E)', () => {
 
       expect(response.status).toBe(200);
       const body = response.body as AuthResponse;
-      const setCookie = response.headers['set-cookie'] as string[] | string | undefined;
-      const cookies = Array.isArray(setCookie) ? setCookie : setCookie ? [setCookie] : [];
+      const setCookie = response.headers['set-cookie'] as
+        | string[]
+        | string
+        | undefined;
+      const cookies = Array.isArray(setCookie)
+        ? setCookie
+        : setCookie
+          ? [setCookie]
+          : [];
       expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
       expect(body).toHaveProperty('user');
       expect(body.user).toHaveProperty('email', email);

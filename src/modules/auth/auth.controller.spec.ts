@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import type { AuthUser, UserResponse } from './interfaces';
+import type { Response } from 'express';
 
 const mockUser: UserResponse = {
   id: 'user-1',
@@ -27,9 +28,9 @@ const mockServiceResponse = {
   token: 'mock-jwt-token',
 };
 
-const mockRes = {
-  cookie: vi.fn(),
-  clearCookie: vi.fn(),
+const mockRes: Partial<Response> = {
+  cookie: vi.fn() as Response['cookie'],
+  clearCookie: vi.fn() as Response['clearCookie'],
 };
 
 const mockAuthService = {
@@ -66,7 +67,10 @@ describe('AuthController', () => {
         password: 'Password@123',
       };
 
-      const result = await controller.register(registerDto, mockRes as never);
+      const result = await controller.register(
+        registerDto,
+        mockRes as Response,
+      );
 
       expect(authService.register).toHaveBeenCalledWith(registerDto);
       expect(mockRes.cookie).toHaveBeenCalledWith(
@@ -85,7 +89,7 @@ describe('AuthController', () => {
         password: 'Password@123',
       };
 
-      const result = await controller.login(loginDto, mockRes as never);
+      const result = await controller.login(loginDto, mockRes as Response);
 
       expect(authService.login).toHaveBeenCalledWith(loginDto);
       expect(mockRes.cookie).toHaveBeenCalledWith(
@@ -99,7 +103,7 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should clear the access_token cookie', () => {
-      controller.logout(mockRes as never);
+      controller.logout(mockRes as Response);
 
       expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token', {
         path: '/',

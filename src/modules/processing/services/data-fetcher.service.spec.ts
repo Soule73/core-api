@@ -9,6 +9,7 @@ import { describe, vi, beforeEach, afterEach, it, expect } from 'vitest';
 
 describe('DataFetcherService', () => {
   let service: DataFetcherService;
+  let module: TestingModule;
 
   const mockDataSourceModel = {
     findById: vi.fn(),
@@ -23,8 +24,13 @@ describe('DataFetcherService', () => {
     getConnector: vi.fn(),
   };
 
+  const mockEncryptionService = {
+    encrypt: vi.fn((v: string) => `enc:${v}`),
+    decrypt: vi.fn((v: string) => v.replace('enc:', '')),
+  };
+
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       providers: [
         DataFetcherService,
         {
@@ -41,10 +47,7 @@ describe('DataFetcherService', () => {
         },
         {
           provide: EncryptionService,
-          useValue: {
-            encrypt: vi.fn((v: string) => `enc:${v}`),
-            decrypt: vi.fn((v: string) => v.replace('enc:', '')),
-          },
+          useValue: mockEncryptionService,
         },
       ],
     }).compile();
@@ -188,6 +191,105 @@ describe('DataFetcherService', () => {
       expect(result.types.count).toBe('integer');
       expect(result.types.price).toBe('number');
       expect(result.types.rating).toBe('number');
+    });
+  });
+
+  describe('fetchData — authConfig decryption', () => {
+    const BASE_64_SEGMENT = '[A-Za-z0-9+/]+=*';
+    const CIPHERTEXT_PATTERN = new RegExp(
+      `^${BASE_64_SEGMENT}:${BASE_64_SEGMENT}:${BASE_64_SEGMENT}$`,
+    );
+
+    it('should decrypt encrypted bearer token before passing config to connector', async () => {
+      const encryptedToken = 'aXY=:dGFn:Y2lwaGVy'; // fake ciphertext format iv:tag:cipher
+      const mockConnector = {
+        fetchData: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+      };
+      mockConnectorFactory.getConnector.mockReturnValue(mockConnector);
+
+      mockEncryptionService.decrypt.mockReturnValueOnce('plain-token');
+
+      mockDataSourceModel.findById.mockReturnValue({
+        lean: () => ({
+          exec: () =>
+            Promise.resolve({
+              _id: 'ds-1',
+              type: 'json',
+              endpoint: 'http://example.com/api',
+              authType: 'bearer',
+              authConfig: { token: encryptedToken },
+            }),
+        }),
+      });
+
+      await service.fetchData({ dataSourceId: 'ds-1' });
+
+      expect(mockEncryptionService.decrypt).toHaveBeenCalledWith(encryptedToken);
+      const passedConfig = mockConnector.fetchData.mock.calls[0][0];
+      expect(passedConfig.authConfig.token).toBe('plain-token');
+    });
+
+    it('should pass plaintext (non-encrypted) values through unchanged', async () => {
+      const plaintextPassword = 'my-plain-password';
+      const mockConnector = {
+        fetchData: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+      };
+      mockConnectorFactory.getConnector.mockReturnValue(mockConnector);
+
+      mockEncryptionService.decrypt.mockClear();
+
+      mockDataSourceModel.findById.mockReturnValue({
+        lean: () => ({
+          exec: () =>
+            Promise.resolve({
+              _id: 'ds-2',
+              type: 'json',
+              endpoint: 'http://example.com/api',
+              authType: 'basic',
+              authConfig: { password: plaintextPassword },
+            }),
+        }),
+      });
+
+      await service.fetchData({ dataSourceId: 'ds-2' });
+
+      // Non-ciphertext values must not be passed to decrypt
+      expect(mockEncryptionService.decrypt).not.toHaveBeenCalled();
+      const passedConfig = mockConnector.fetchData.mock.calls[0][0];
+      expect(passedConfig.authConfig.password).toBe(plaintextPassword);
+    });
+
+    it('should not attempt to decrypt fields for auth type with no encrypted fields', async () => {
+      const mockConnector = {
+        fetchData: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+      };
+      mockConnectorFactory.getConnector.mockReturnValue(mockConnector);
+
+      mockEncryptionService.decrypt.mockClear();
+
+      mockDataSourceModel.findById.mockReturnValue({
+        lean: () => ({
+          exec: () =>
+            Promise.resolve({
+              _id: 'ds-3',
+              type: 'json',
+              endpoint: 'http://example.com/api',
+              authType: 'none',
+              authConfig: {},
+            }),
+        }),
+      });
+
+      await service.fetchData({ dataSourceId: 'ds-3' });
+
+      expect(mockEncryptionService.decrypt).not.toHaveBeenCalled();
+    });
+
+    it('pattern check: CIPHERTEXT_PATTERN only matches iv:tag:cipher format', () => {
+      expect(CIPHERTEXT_PATTERN.test('aXY=:dGFn:Y2lwaGVy')).toBe(true);
+      expect(CIPHERTEXT_PATTERN.test('plaintext')).toBe(false);
+      expect(CIPHERTEXT_PATTERN.test('Bearer my-token')).toBe(false);
+      expect(CIPHERTEXT_PATTERN.test('')).toBe(false);
     });
   });
 });

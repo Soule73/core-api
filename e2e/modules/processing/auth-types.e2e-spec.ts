@@ -240,4 +240,4 @@ describe('Processing - Authentication Types (E2E)', () => {
       expect([400, 401, 403, 500, 502, 503]).toContain(response.status);
     });
   });
-});;
+});

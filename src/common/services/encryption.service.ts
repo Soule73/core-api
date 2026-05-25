@@ -15,12 +15,18 @@ export class EncryptionService {
 
   constructor() {
     const hexKey = process.env.ENCRYPTION_KEY ?? '';
-    if (hexKey.length !== 64) {
+    if (hexKey.length !== 64 || !/^[0-9a-fA-F]{64}$/.test(hexKey)) {
       throw new InternalServerErrorException(
         'ENCRYPTION_KEY must be 64 hex characters (32 bytes)',
       );
     }
-    this.key = Buffer.from(hexKey, 'hex');
+    const keyBuffer = Buffer.from(hexKey, 'hex');
+    if (keyBuffer.length !== 32) {
+      throw new InternalServerErrorException(
+        'ENCRYPTION_KEY must decode to exactly 32 bytes',
+      );
+    }
+    this.key = keyBuffer;
   }
 
   /**

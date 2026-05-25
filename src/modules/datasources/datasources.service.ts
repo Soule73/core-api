@@ -152,29 +152,6 @@ export class DataSourcesService {
   /**
    * Decrypts sensitive fields from authConfig after reading from MongoDB.
    */
-  private decryptAuthConfig(
-    authType: string,
-    authConfig: Record<string, string>,
-  ): Record<string, string> {
-    const result = { ...authConfig };
-    const fieldsToDecrypt: Record<string, string[]> = {
-      bearer: ['token'],
-      apiKey: ['key', 'apiKey'],
-      basic: ['password'],
-    };
-    const fields = fieldsToDecrypt[authType] ?? [];
-    for (const field of fields) {
-      if (typeof result[field] === 'string' && result[field].length > 0) {
-        try {
-          result[field] = this.encryptionService.decrypt(result[field]);
-        } catch {
-          // Field may not be encrypted (legacy data), return as-is
-        }
-      }
-    }
-    return result;
-  }
-
   private buildDataSourceResponse(
     dataSource: DataSourceDocument,
   ): DataSourceResponse {

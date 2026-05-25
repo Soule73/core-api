@@ -23,11 +23,24 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser, AuthResponse, UserResponse } from './interfaces';
 
+function parseExpirationToMs(expiration: string): number {
+  const match = /^(\d+)([smhd])$/.exec(expiration);
+  if (!match) return 7 * 24 * 60 * 60 * 1000;
+  const value = parseInt(match[1], 10);
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  };
+  return value * (multipliers[match[2]] ?? multipliers['d']);
+}
+
 const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: parseExpirationToMs(process.env.JWT_EXPIRATION ?? '7d'),
   path: '/',
 };
 
@@ -58,8 +71,8 @@ export class AuthController {
   @Throttle({ auth: { limit: 10, ttl: 900 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Authenticate user and get JWT token' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated' })
+  @ApiOperation({ summary: 'Authenticate user', description: 'Sets an httpOnly access_token cookie on success. No token is returned in the response body.' })
+  @ApiResponse({ status: 200, description: 'Successfully authenticated, access_token cookie set' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,

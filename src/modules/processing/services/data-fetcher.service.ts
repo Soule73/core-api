@@ -186,13 +186,14 @@ export class DataFetcherService {
       basic: ['password'],
     };
     const fields = fieldsToDecrypt[authType] ?? [];
+    const CIPHERTEXT_PATTERN = /^[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*$/;
     for (const field of fields) {
       if (typeof result[field] === 'string' && result[field].length > 0) {
-        try {
-          result[field] = this.encryptionService.decrypt(result[field]);
-        } catch {
-          // Field may not be encrypted (legacy data), return as-is
+        if (!CIPHERTEXT_PATTERN.test(result[field])) {
+          // Not an encrypted value (legacy plaintext), skip
+          continue;
         }
+        result[field] = this.encryptionService.decrypt(result[field]);
       }
     }
     return result;
