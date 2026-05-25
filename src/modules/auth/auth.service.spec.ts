@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { JwtService } from '@nestjs/jwt';
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { User } from './schemas/user.schema';
 import { Role } from './schemas/role.schema';
+import { Session } from './schemas/session.schema';
 import * as bcrypt from 'bcryptjs';
 
 const mockPermission = {
@@ -41,7 +41,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let userModelMock: Record<string, ReturnType<typeof vi.fn>>;
   let roleModelMock: Record<string, ReturnType<typeof vi.fn>>;
-  let jwtServiceMock: Record<string, ReturnType<typeof vi.fn>>;
+  let sessionModelMock: Record<string, ReturnType<typeof vi.fn>>;
 
   beforeEach(async () => {
     userModelMock = {
@@ -54,8 +54,11 @@ describe('AuthService', () => {
       findOne: vi.fn(),
     };
 
-    jwtServiceMock = {
-      sign: vi.fn().mockReturnValue('mock-jwt-token'),
+    sessionModelMock = {
+      create: vi.fn(),
+      findById: vi.fn(),
+      deleteOne: vi.fn(),
+      deleteMany: vi.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -63,7 +66,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: getModelToken(User.name), useValue: userModelMock },
         { provide: getModelToken(Role.name), useValue: roleModelMock },
-        { provide: JwtService, useValue: jwtServiceMock },
+        { provide: getModelToken(Session.name), useValue: sessionModelMock },
       ],
     }).compile();
 
@@ -83,6 +86,7 @@ describe('AuthService', () => {
       userModelMock.findById.mockReturnValue({
         populate: vi.fn().mockReturnValue(newUser),
       });
+      sessionModelMock.create.mockResolvedValue({});
 
       const registerDto = {
         username: 'newuser',
@@ -92,7 +96,7 @@ describe('AuthService', () => {
 
       const result = await service.register(registerDto);
 
-      expect(result).toHaveProperty('token');
+      expect(result).toHaveProperty('sessionId');
       expect(result).toHaveProperty('user');
       expect(userModelMock.findOne).toHaveBeenCalledWith({
         email: registerDto.email,
@@ -123,6 +127,7 @@ describe('AuthService', () => {
       userModelMock.findById.mockReturnValue({
         populate: vi.fn().mockReturnValue(userWithPassword),
       });
+      sessionModelMock.create.mockResolvedValue({});
 
       const loginDto = {
         email: 'test@example.com',
@@ -131,7 +136,7 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(result).toHaveProperty('token');
+      expect(result).toHaveProperty('sessionId');
       expect(result).toHaveProperty('user');
       expect(result.user.email).toBe('test@example.com');
     });
@@ -166,6 +171,63 @@ describe('AuthService', () => {
     });
   });
 
+  describe('logout', () => {
+    it('should delete the session document', async () => {
+      sessionModelMock.deleteOne.mockResolvedValue({ deletedCount: 1 });
+
+      await service.logout('some-session-uuid');
+
+      expect(sessionModelMock.deleteOne).toHaveBeenCalledWith({
+        _id: 'some-session-uuid',
+      });
+    });
+  });
+
+  describe('validateSession', () => {
+    it('should return AuthUser for a valid session', async () => {
+      const mockUser = createMockUser();
+      const futureDate = new Date(Date.now() + 86400000);
+
+      sessionModelMock.findById.mockResolvedValue({
+        _id: 'session-uuid',
+        userId: 'user-1',
+        expiresAt: futureDate,
+      });
+      userModelMock.findById.mockReturnValue({
+        populate: vi.fn().mockReturnValue(mockUser),
+      });
+
+      const result = await service.validateSession('session-uuid');
+
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('email');
+      expect(result.email).toBe('test@example.com');
+    });
+
+    it('should throw UnauthorizedException for expired session', async () => {
+      const pastDate = new Date(Date.now() - 1000);
+
+      sessionModelMock.findById.mockResolvedValue({
+        _id: 'expired-uuid',
+        userId: 'user-1',
+        expiresAt: pastDate,
+      });
+      sessionModelMock.deleteOne.mockResolvedValue({});
+
+      await expect(service.validateSession('expired-uuid')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+
+    it('should throw UnauthorizedException for unknown session', async () => {
+      sessionModelMock.findById.mockResolvedValue(null);
+
+      await expect(service.validateSession('unknown-uuid')).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
   describe('getProfile', () => {
     it('should return user profile for valid user id', async () => {
       const mockUser = createMockUser();
@@ -188,42 +250,6 @@ describe('AuthService', () => {
       await expect(service.getProfile('invalid-id')).rejects.toThrow(
         UnauthorizedException,
       );
-    });
-  });
-
-  describe('validateUser', () => {
-    it('should return user for valid JWT payload', async () => {
-      const mockUser = createMockUser();
-      userModelMock.findById.mockReturnValue({
-        populate: vi.fn().mockReturnValue(mockUser),
-      });
-
-      const payload = {
-        sub: 'user-1',
-        email: 'test@example.com',
-        role: 'user',
-      };
-
-      const result = await service.validateUser(payload);
-
-      expect(result).not.toBeNull();
-      expect(result?.email).toBe('test@example.com');
-    });
-
-    it('should return null for invalid user id', async () => {
-      userModelMock.findById.mockReturnValue({
-        populate: vi.fn().mockReturnValue(null),
-      });
-
-      const payload = {
-        sub: 'invalid-id',
-        email: 'test@example.com',
-        role: 'user',
-      };
-
-      const result = await service.validateUser(payload);
-
-      expect(result).toBeNull();
     });
   });
 });

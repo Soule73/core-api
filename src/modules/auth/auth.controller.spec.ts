@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import type { AuthUser, UserResponse } from './interfaces';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 const mockUser: UserResponse = {
   id: 'user-1',
@@ -25,7 +25,7 @@ const mockUser: UserResponse = {
 
 const mockServiceResponse = {
   user: mockUser,
-  token: 'mock-jwt-token',
+  sessionId: 'mock-session-uuid',
 };
 
 const mockRes: Partial<Response> = {
@@ -36,6 +36,7 @@ const mockRes: Partial<Response> = {
 const mockAuthService = {
   register: vi.fn().mockResolvedValue(mockServiceResponse),
   login: vi.fn().mockResolvedValue(mockServiceResponse),
+  logout: vi.fn().mockResolvedValue(undefined),
   getProfile: vi.fn().mockResolvedValue(mockUser),
 };
 
@@ -74,8 +75,8 @@ describe('AuthController', () => {
 
       expect(authService.register).toHaveBeenCalledWith(registerDto);
       expect(mockRes.cookie).toHaveBeenCalledWith(
-        'access_token',
-        'mock-jwt-token',
+        'session_id',
+        'mock-session-uuid',
         expect.objectContaining({ httpOnly: true }),
       );
       expect(result).toEqual({ user: mockUser });
@@ -93,8 +94,8 @@ describe('AuthController', () => {
 
       expect(authService.login).toHaveBeenCalledWith(loginDto);
       expect(mockRes.cookie).toHaveBeenCalledWith(
-        'access_token',
-        'mock-jwt-token',
+        'session_id',
+        'mock-session-uuid',
         expect.objectContaining({ httpOnly: true }),
       );
       expect(result).toEqual({ user: mockUser });
@@ -102,10 +103,11 @@ describe('AuthController', () => {
   });
 
   describe('logout', () => {
-    it('should clear the access_token cookie', () => {
-      controller.logout(mockRes as Response);
+    it('should clear the session_id cookie', async () => {
+      const mockReq = { cookies: { session_id: 'some-session-id' } };
+      await controller.logout(mockReq as unknown as Request, mockRes as Response);
 
-      expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token', {
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('session_id', {
         path: '/',
       });
     });
