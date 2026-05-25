@@ -8,6 +8,7 @@ import {
   DataSourceDocument,
 } from '../../datasources/schemas/datasource.schema';
 import { ConnectorFactory, DataSourceConfig, FetchQuery } from '../connectors';
+import { EncryptionService } from '../../../common/services/encryption.service';
 
 export interface FetchDataResult {
   success: boolean;
@@ -40,6 +41,7 @@ export class DataFetcherService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: cacheManager_1.Cache,
     private readonly connectorFactory: ConnectorFactory,
+    private readonly encryptionService: EncryptionService,
   ) {
     /**   */
   }
@@ -154,17 +156,46 @@ export class DataFetcherService {
   private buildConfig(
     dataSource: DataSourceDocument | Record<string, unknown>,
   ): DataSourceConfig {
+    const authType = dataSource.authType as string;
+    const rawAuthConfig = (dataSource.authConfig ?? {}) as Record<
+      string,
+      string
+    >;
+    const authConfig = this.decryptAuthConfig(authType, rawAuthConfig);
     return {
       type: dataSource.type as DataSourceConfig['type'],
       endpoint: dataSource.endpoint as string | undefined,
       filePath: dataSource.filePath as string | undefined,
       httpMethod: dataSource.httpMethod as DataSourceConfig['httpMethod'],
-      authType: dataSource.authType as DataSourceConfig['authType'],
-      authConfig: dataSource.authConfig as DataSourceConfig['authConfig'],
+      authType: authType as DataSourceConfig['authType'],
+      authConfig,
       timestampField: dataSource.timestampField as string | undefined,
       esIndex: dataSource.esIndex as string | undefined,
       esQuery: dataSource.esQuery as Record<string, unknown> | undefined,
     };
+  }
+
+  private decryptAuthConfig(
+    authType: string,
+    authConfig: Record<string, string>,
+  ): Record<string, string> {
+    const result = { ...authConfig };
+    const fieldsToDecrypt: Record<string, string[]> = {
+      bearer: ['token'],
+      apiKey: ['key', 'apiKey'],
+      basic: ['password'],
+    };
+    const fields = fieldsToDecrypt[authType] ?? [];
+    for (const field of fields) {
+      if (typeof result[field] === 'string' && result[field].length > 0) {
+        try {
+          result[field] = this.encryptionService.decrypt(result[field]);
+        } catch {
+          // Field may not be encrypted (legacy data), return as-is
+        }
+      }
+    }
+    return result;
   }
 
   private buildQuery(options: FetchDataOptions): FetchQuery {

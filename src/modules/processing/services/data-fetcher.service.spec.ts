@@ -4,6 +4,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { DataFetcherService } from './data-fetcher.service';
 import { DataSource } from '../../datasources/schemas/datasource.schema';
 import { ConnectorFactory } from '../connectors';
+import { EncryptionService } from '../../../common/services/encryption.service';
 import { describe, vi, beforeEach, afterEach, it, expect } from 'vitest';
 
 describe('DataFetcherService', () => {
@@ -37,6 +38,13 @@ describe('DataFetcherService', () => {
         {
           provide: ConnectorFactory,
           useValue: mockConnectorFactory,
+        },
+        {
+          provide: EncryptionService,
+          useValue: {
+            encrypt: vi.fn((v: string) => `enc:${v}`),
+            decrypt: vi.fn((v: string) => v.replace('enc:', '')),
+          },
         },
       ],
     }).compile();

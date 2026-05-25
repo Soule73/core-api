@@ -5,6 +5,7 @@ import { NotFoundException } from '@nestjs/common';
 import { DataSourcesService } from './datasources.service';
 import { DataSource } from './schemas/datasource.schema';
 import { WidgetsService } from '../widgets/widgets.service';
+import { EncryptionService } from '../../common/services/encryption.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -50,6 +51,13 @@ describe('DataSourcesService', () => {
         {
           provide: WidgetsService,
           useValue: mockWidgetsService,
+        },
+        {
+          provide: EncryptionService,
+          useValue: {
+            encrypt: vi.fn((v: string) => `enc:${v}`),
+            decrypt: vi.fn((v: string) => v.replace('enc:', '')),
+          },
         },
       ],
     }).compile();

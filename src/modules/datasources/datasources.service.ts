@@ -9,6 +9,7 @@ import { DataSource, DataSourceDocument } from './schemas/datasource.schema';
 import { CreateDataSourceDto, UpdateDataSourceDto } from './dto';
 import { DataSourceResponse } from './interfaces';
 import { WidgetsService } from '../widgets/widgets.service';
+import { EncryptionService } from '../../common/services/encryption.service';
 
 @Injectable()
 export class DataSourcesService {
@@ -16,6 +17,7 @@ export class DataSourcesService {
     @InjectModel(DataSource.name)
     private dataSourceModel: Model<DataSourceDocument>,
     private readonly widgetsService: WidgetsService,
+    private readonly encryptionService: EncryptionService,
   ) {
     /** */
   }
@@ -24,8 +26,13 @@ export class DataSourcesService {
     userId: string,
     createDataSourceDto: CreateDataSourceDto,
   ): Promise<DataSourceResponse> {
+    const encryptedAuthConfig = this.encryptAuthConfig(
+      createDataSourceDto.authType ?? 'none',
+      (createDataSourceDto.authConfig ?? {}) as Record<string, string>,
+    );
     const dataSource = await this.dataSourceModel.create({
       ...createDataSourceDto,
+      authConfig: encryptedAuthConfig,
       ownerId: new Types.ObjectId(userId),
     });
 
@@ -72,9 +79,24 @@ export class DataSourcesService {
       throw new NotFoundException('DataSource not found');
     }
 
+    const updatePayload: Omit<UpdateDataSourceDto, 'authConfig'> & {
+      authConfig?: Record<string, string>;
+    } = {
+      ...updateDataSourceDto,
+      authConfig: updateDataSourceDto.authConfig as
+        | Record<string, string>
+        | undefined,
+    };
+    if (updateDataSourceDto.authConfig !== undefined) {
+      updatePayload.authConfig = this.encryptAuthConfig(
+        updateDataSourceDto.authType ?? dataSource.authType ?? 'none',
+        updateDataSourceDto.authConfig as Record<string, string>,
+      );
+    }
+
     const updatedDataSource = await this.dataSourceModel.findByIdAndUpdate(
       id,
-      updateDataSourceDto,
+      updatePayload,
       { new: true },
     );
 
@@ -103,6 +125,54 @@ export class DataSourcesService {
     }
 
     await this.dataSourceModel.findByIdAndDelete(id);
+  }
+
+  /**
+   * Encrypts sensitive fields in authConfig before persisting to MongoDB.
+   */
+  private encryptAuthConfig(
+    authType: string,
+    authConfig: Record<string, string>,
+  ): Record<string, string> {
+    const result = { ...authConfig };
+    const fieldsToEncrypt: Record<string, string[]> = {
+      bearer: ['token'],
+      apiKey: ['key', 'apiKey'],
+      basic: ['password'],
+    };
+    const fields = fieldsToEncrypt[authType] ?? [];
+    for (const field of fields) {
+      if (typeof result[field] === 'string' && result[field].length > 0) {
+        result[field] = this.encryptionService.encrypt(result[field]);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Decrypts sensitive fields from authConfig after reading from MongoDB.
+   */
+  private decryptAuthConfig(
+    authType: string,
+    authConfig: Record<string, string>,
+  ): Record<string, string> {
+    const result = { ...authConfig };
+    const fieldsToDecrypt: Record<string, string[]> = {
+      bearer: ['token'],
+      apiKey: ['key', 'apiKey'],
+      basic: ['password'],
+    };
+    const fields = fieldsToDecrypt[authType] ?? [];
+    for (const field of fields) {
+      if (typeof result[field] === 'string' && result[field].length > 0) {
+        try {
+          result[field] = this.encryptionService.decrypt(result[field]);
+        } catch {
+          // Field may not be encrypted (legacy data), return as-is
+        }
+      }
+    }
+    return result;
   }
 
   private buildDataSourceResponse(
