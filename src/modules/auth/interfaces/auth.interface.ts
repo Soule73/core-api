@@ -32,5 +32,9 @@ export interface PermissionResponse {
 
 export interface AuthResponse {
   user: UserResponse;
+}
+
+export interface AuthServiceResponse {
+  user: UserResponse;
   token: string;
 }

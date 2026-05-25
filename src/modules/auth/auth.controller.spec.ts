@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import type { AuthUser, AuthResponse, UserResponse } from './interfaces';
+import type { AuthUser, UserResponse } from './interfaces';
 
 const mockUser: UserResponse = {
   id: 'user-1',
@@ -20,21 +20,21 @@ const mockUser: UserResponse = {
       },
     ],
   },
-  preferences: {
-    theme: 'light',
-    language: 'fr',
-  },
-  createdAt: new Date(),
 };
 
-const mockAuthResponse: AuthResponse = {
-  accessToken: 'mock-jwt-token',
+const mockServiceResponse = {
   user: mockUser,
+  token: 'mock-jwt-token',
+};
+
+const mockRes = {
+  cookie: vi.fn(),
+  clearCookie: vi.fn(),
 };
 
 const mockAuthService = {
-  register: vi.fn().mockResolvedValue(mockAuthResponse),
-  login: vi.fn().mockResolvedValue(mockAuthResponse),
+  register: vi.fn().mockResolvedValue(mockServiceResponse),
+  login: vi.fn().mockResolvedValue(mockServiceResponse),
   getProfile: vi.fn().mockResolvedValue(mockUser),
 };
 
@@ -43,6 +43,7 @@ describe('AuthController', () => {
   let authService: typeof mockAuthService;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
@@ -58,34 +59,51 @@ describe('AuthController', () => {
   });
 
   describe('register', () => {
-    it('should register a new user and return auth response', async () => {
+    it('should register a new user, set cookie and return user', async () => {
       const registerDto = {
         username: 'newuser',
         email: 'newuser@example.com',
         password: 'Password@123',
       };
 
-      const result = await controller.register(registerDto);
+      const result = await controller.register(registerDto, mockRes as never);
 
       expect(authService.register).toHaveBeenCalledWith(registerDto);
-      expect(result).toEqual(mockAuthResponse);
-      expect(result.accessToken).toBe('mock-jwt-token');
-      expect(result.user.email).toBe('test@example.com');
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'mock-jwt-token',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(result).toEqual({ user: mockUser });
     });
   });
 
   describe('login', () => {
-    it('should login and return auth response', async () => {
+    it('should login, set cookie and return user', async () => {
       const loginDto = {
         email: 'test@example.com',
         password: 'Password@123',
       };
 
-      const result = await controller.login(loginDto);
+      const result = await controller.login(loginDto, mockRes as never);
 
       expect(authService.login).toHaveBeenCalledWith(loginDto);
-      expect(result).toEqual(mockAuthResponse);
-      expect(result.accessToken).toBe('mock-jwt-token');
+      expect(mockRes.cookie).toHaveBeenCalledWith(
+        'access_token',
+        'mock-jwt-token',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(result).toEqual({ user: mockUser });
+    });
+  });
+
+  describe('logout', () => {
+    it('should clear the access_token cookie', () => {
+      controller.logout(mockRes as never);
+
+      expect(mockRes.clearCookie).toHaveBeenCalledWith('access_token', {
+        path: '/',
+      });
     });
   });
 
