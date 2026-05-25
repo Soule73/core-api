@@ -26,7 +26,6 @@ export class AuthenticationService implements IAuthenticator {
       );
     }
 
-    // Extract JWT from the Set-Cookie header (httpOnly cookie migration)
     const setCookieHeader = response.headers['set-cookie'] as
       | string[]
       | string
@@ -38,18 +37,18 @@ export class AuthenticationService implements IAuthenticator {
         : [];
 
     for (const cookie of cookies) {
-      const match = /access_token=([^;]+)/.exec(cookie);
+      const match = /session_id=([^;]+)/.exec(cookie);
       if (match) {
         return match[1];
       }
     }
 
-    throw new Error(`No token returned for ${email}`);
+    throw new Error(`No session_id cookie returned for ${email}`);
   }
 
-  async logout(app: INestApplication, token: string): Promise<void> {
+  async logout(app: INestApplication, sessionId: string): Promise<void> {
     await request(app.getHttpServer() as Server)
       .post(this.logoutEndpoint)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', `session_id=${sessionId}`);
   }
 }

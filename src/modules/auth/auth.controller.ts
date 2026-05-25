@@ -7,15 +7,11 @@ import {
   HttpCode,
   HttpStatus,
   Res,
+  Req,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto } from './dto';
 import { JwtAuthGuard } from './guards';
@@ -23,24 +19,12 @@ import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthUser, AuthResponse, UserResponse } from './interfaces';
 
-function parseExpirationToMs(expiration: string): number {
-  const match = /^(\d+)([smhd])$/.exec(expiration);
-  if (!match) return 7 * 24 * 60 * 60 * 1000;
-  const value = parseInt(match[1], 10);
-  const multipliers: Record<string, number> = {
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000,
-    d: 24 * 60 * 60 * 1000,
-  };
-  return value * (multipliers[match[2]] ?? multipliers['d']);
-}
-
-const COOKIE_OPTIONS = {
+const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
   sameSite: 'strict' as const,
-  maxAge: parseExpirationToMs(process.env.JWT_EXPIRATION ?? '7d'),
+  maxAge:
+    parseInt(process.env.SESSION_TTL_DAYS ?? '7', 10) * 24 * 60 * 60 * 1000,
   path: '/',
 };
 
@@ -62,8 +46,8 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const { user, token } = await this.authService.register(registerDto);
-    res.cookie('access_token', token, COOKIE_OPTIONS);
+    const { user, sessionId } = await this.authService.register(registerDto);
+    res.cookie('session_id', sessionId, SESSION_COOKIE_OPTIONS);
     return { user };
   }
 
@@ -74,34 +58,42 @@ export class AuthController {
   @ApiOperation({
     summary: 'Authenticate user',
     description:
-      'Sets an httpOnly access_token cookie on success. No token is returned in the response body.',
+      'Sets an httpOnly session_id cookie on success. No token is returned in the response body.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Successfully authenticated, access_token cookie set',
+    description: 'Successfully authenticated, session_id cookie set',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AuthResponse> {
-    const { user, token } = await this.authService.login(loginDto);
-    res.cookie('access_token', token, COOKIE_OPTIONS);
+    const { user, sessionId } = await this.authService.login(loginDto);
+    res.cookie('session_id', sessionId, SESSION_COOKIE_OPTIONS);
     return { user };
   }
 
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Logout and clear session cookie' })
+  @ApiOperation({ summary: 'Logout and invalidate session' })
   @ApiResponse({ status: 204, description: 'Successfully logged out' })
-  logout(@Res({ passthrough: true }) res: Response): void {
-    res.clearCookie('access_token', { path: '/' });
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const sessionId = (req.cookies as Record<string, string> | undefined)?.[
+      'session_id'
+    ];
+    if (sessionId) {
+      await this.authService.logout(sessionId);
+    }
+    res.clearCookie('session_id', { path: '/' });
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiResponse({ status: 200, description: 'User profile retrieved' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

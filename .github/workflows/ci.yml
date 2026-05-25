@@ -109,8 +109,7 @@ jobs:
           REDIS_HOST: localhost
           REDIS_PORT: '6380'
           ELASTICSEARCH_URL: http://localhost:9201
-          JWT_SECRET: test-jwt-secret-for-e2e-testing
-          JWT_EXPIRES_IN: 1d
+          SESSION_TTL_DAYS: '1'
           NODE_ENV: test
           ENCRYPTION_KEY: '0000000000000000000000000000000000000000000000000000000000000000'
         run: yarn test:e2e

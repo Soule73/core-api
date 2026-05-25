@@ -4,27 +4,33 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { User, UserDocument } from './schemas/user.schema';
 import { Role, RoleDocument } from './schemas/role.schema';
+import { Session, SessionDocument } from './schemas/session.schema';
 import { RegisterDto, LoginDto } from './dto';
 import {
   AuthServiceResponse,
-  JwtPayload,
+  AuthUser,
   UserResponse,
   RoleResponse,
 } from './interfaces';
 
 @Injectable()
 export class AuthService {
+  private readonly sessionTtlMs: number;
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Role.name) private roleModel: Model<RoleDocument>,
-    private jwtService: JwtService,
-  ) {}
+    @InjectModel(Session.name) private sessionModel: Model<SessionDocument>,
+  ) {
+    const ttlDays = parseInt(process.env.SESSION_TTL_DAYS ?? '7', 10);
+    this.sessionTtlMs = ttlDays * 24 * 60 * 60 * 1000;
+  }
 
   async register(registerDto: RegisterDto): Promise<AuthServiceResponse> {
     const { username, email, password } = registerDto;
@@ -48,10 +54,10 @@ export class AuthService {
       roleId: defaultRole._id,
     });
 
-    const token = this.generateToken(user, defaultRole.name);
     const userResponse = await this.buildUserResponse(user);
+    const sessionId = await this.createSession(user._id.toString());
 
-    return { user: userResponse, token };
+    return { user: userResponse, sessionId };
   }
 
   async login(loginDto: LoginDto): Promise<AuthServiceResponse> {
@@ -72,11 +78,42 @@ export class AuthService {
       populate: { path: 'permissions' },
     });
 
-    const role = populatedUser?.roleId as unknown as RoleDocument;
-    const token = this.generateToken(user, role?.name || 'user');
     const userResponse = await this.buildUserResponse(populatedUser!);
+    const sessionId = await this.createSession(user._id.toString());
 
-    return { user: userResponse, token };
+    return { user: userResponse, sessionId };
+  }
+
+  async logout(sessionId: string): Promise<void> {
+    await this.sessionModel.deleteOne({ _id: sessionId });
+  }
+
+  async validateSession(sessionId: string): Promise<AuthUser> {
+    const session = await this.sessionModel.findById(sessionId);
+
+    if (!session || session.expiresAt < new Date()) {
+      if (session) {
+        await this.sessionModel.deleteOne({ _id: sessionId });
+      }
+      throw new UnauthorizedException('Session expired or not found');
+    }
+
+    const user = await this.userModel.findById(session.userId).populate({
+      path: 'roleId',
+      populate: { path: 'permissions' },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const role = user.roleId as unknown as RoleDocument;
+
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      role: role?.name || 'user',
+    };
   }
 
   async getProfile(userId: string): Promise<UserResponse> {
@@ -92,21 +129,22 @@ export class AuthService {
     return this.buildUserResponse(user);
   }
 
-  async validateUser(payload: JwtPayload): Promise<UserDocument | null> {
-    return this.userModel.findById(payload.sub).populate({
-      path: 'roleId',
-      populate: { path: 'permissions' },
-    });
+  async revokeAllUserSessions(userId: string): Promise<void> {
+    await this.sessionModel.deleteMany({ userId });
   }
 
-  private generateToken(user: UserDocument, roleName: string): string {
-    const payload: JwtPayload = {
-      sub: user._id.toString(),
-      email: user.email,
-      role: roleName,
-    };
+  private async createSession(userId: string): Promise<string> {
+    const sessionId = randomUUID();
+    const expiresAt = new Date(Date.now() + this.sessionTtlMs);
 
-    return this.jwtService.sign(payload);
+    await this.sessionModel.create({
+      _id: sessionId,
+      userId,
+      createdAt: new Date(),
+      expiresAt,
+    });
+
+    return sessionId;
   }
 
   private async buildUserResponse(user: UserDocument): Promise<UserResponse> {

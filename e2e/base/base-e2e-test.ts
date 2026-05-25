@@ -47,7 +47,7 @@ export abstract class BaseE2ETest {
 
     if (useAuth) {
       const token = asAdmin ? this.adminToken : this.userToken;
-      req = req.set('Authorization', `Bearer ${token}`);
+      req = req.set('Cookie', `session_id=${token}`);
     }
 
     if (query) {

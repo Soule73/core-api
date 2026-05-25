@@ -41,9 +41,7 @@ export class NestAppFactory implements IAppFactory {
               REDIS_PORT: process.env.REDIS_PORT || '6380',
               ELASTICSEARCH_URL:
                 process.env.ELASTICSEARCH_URL || 'http://localhost:9201',
-              JWT_SECRET:
-                process.env.JWT_SECRET || 'test-jwt-secret-for-e2e-testing',
-              JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '1d',
+              SESSION_TTL_DAYS: process.env.SESSION_TTL_DAYS || '1',
             }),
           ],
         }),

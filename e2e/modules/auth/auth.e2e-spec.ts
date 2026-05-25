@@ -30,10 +30,10 @@ class AuthE2ETest extends BaseE2ETest {
     return this.get(`${this.basePath}/profile`, { asAdmin: true });
   }
 
-  getProfileWithToken(token: string): Promise<request.Response> {
+  getProfileWithCookie(sessionId: string): Promise<request.Response> {
     return request(this.server)
       .get(`${this.basePath}/profile`)
-      .set('Authorization', `Bearer ${token}`);
+      .set('Cookie', `session_id=${sessionId}`);
   }
 
   getProfileWithoutAuth(): Promise<request.Response> {
@@ -63,7 +63,7 @@ describe('Auth Module (E2E)', () => {
         : setCookie
           ? [setCookie]
           : [];
-      expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('session_id='))).toBe(true);
       expect(body).toHaveProperty('user');
       expect(body.user).toHaveProperty('email', 'authnewuser@test.com');
       expect(body.user).not.toHaveProperty('password');
@@ -116,7 +116,7 @@ describe('Auth Module (E2E)', () => {
         : setCookie
           ? [setCookie]
           : [];
-      expect(cookies.some((c) => c.startsWith('access_token='))).toBe(true);
+      expect(cookies.some((c) => c.startsWith('session_id='))).toBe(true);
       expect(body).toHaveProperty('user');
       expect(body.user).toHaveProperty('email', email);
     });
@@ -156,8 +156,8 @@ describe('Auth Module (E2E)', () => {
       expect(response.status).toBe(401);
     });
 
-    it('should fail with invalid token', async () => {
-      const response = await test.getProfileWithToken('invalid-token');
+    it('should fail with invalid session cookie', async () => {
+      const response = await test.getProfileWithCookie('invalid-session-id');
 
       expect(response.status).toBe(401);
     });
