@@ -2,11 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
+  app.use(helmet());
 
   app.enableCors({
     origin: configService.get<string[]>('app.corsOrigins'),
@@ -50,25 +53,23 @@ async function bootstrap() {
     .addTag('AI Conversations', 'AI conversation history management')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'Core API Documentation',
-    customfavIcon: 'https://nestjs.com/img/logo-small.svg',
-    customCssUrl: 'https://unpkg.com/swagger-ui-dist@5/swagger-ui.css',
-    customJs: [
-      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js',
-      'https://unpkg.com/swagger-ui-dist@5/swagger-ui-standalone-preset.js',
-    ],
-    customCss: '.swagger-ui .topbar { display: none }',
-  });
-
   const port = configService.get<number>('app.port') || 3000;
   const nodeEnv = configService.get<string>('app.nodeEnv') || 'development';
+
+  if (nodeEnv !== 'production') {
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document, {
+      customSiteTitle: 'Core API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
+    });
+  }
 
   await app.listen(port);
 
   console.log(`Core API running on port ${port}`);
   console.log(`Environment: ${nodeEnv}`);
-  console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  if (nodeEnv !== 'production') {
+    console.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  }
 }
 void bootstrap();

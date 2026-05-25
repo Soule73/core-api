@@ -35,7 +35,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : responseObj.message || message;
       }
     } else if (exception instanceof Error) {
-      message = exception.message;
+      if (process.env.NODE_ENV !== 'production') {
+        message = exception.message;
+      }
     }
 
     response.status(status).json({

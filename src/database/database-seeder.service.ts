@@ -125,8 +125,18 @@ export class DatabaseSeederService implements OnModuleInit {
   }
 
   private async seedAdminUser(): Promise<void> {
+    const adminEmail = this.configService.get<string>('SEED_ADMIN_EMAIL');
+    const adminPassword = this.configService.get<string>('SEED_ADMIN_PASSWORD');
+
+    if (!adminEmail || !adminPassword) {
+      this.logger.warn(
+        'SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD not set - skipping admin user seed',
+      );
+      return;
+    }
+
     const existingAdmin = await this.userModel.findOne({
-      $or: [{ username: 'admin' }, { email: 'admin@customdash.com' }],
+      $or: [{ username: 'admin' }, { email: adminEmail }],
     });
 
     if (existingAdmin) {
@@ -140,15 +150,15 @@ export class DatabaseSeederService implements OnModuleInit {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash('Admin123!', 10);
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     await this.userModel.create({
       username: 'admin',
-      email: 'admin@customdash.com',
+      email: adminEmail,
       password: hashedPassword,
       roleId: adminRole._id,
     });
 
-    this.logger.log('Created default admin user (admin@customdash.com)');
+    this.logger.log(`Created default admin user (${adminEmail})`);
   }
 }

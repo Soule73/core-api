@@ -65,9 +65,15 @@ export class CsvConnector implements IDataConnector {
   private async readCsvFile(
     filePath: string,
   ): Promise<Record<string, unknown>[]> {
-    const absolutePath = path.isAbsolute(filePath)
-      ? filePath
-      : path.join(process.cwd(), filePath);
+    const uploadsDir = path.resolve(process.cwd(), 'uploads');
+    const absolutePath = path.resolve(uploadsDir, filePath);
+
+    if (
+      !absolutePath.startsWith(uploadsDir + path.sep) &&
+      absolutePath !== uploadsDir
+    ) {
+      throw new Error('Access denied: file path outside uploads directory');
+    }
 
     const fileContent = await fs.readFile(absolutePath, 'utf-8');
     return this.parseCsvString(fileContent);

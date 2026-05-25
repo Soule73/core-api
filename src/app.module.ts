@@ -34,8 +34,14 @@ import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
     }),
     ThrottlerModule.forRoot([
       {
+        name: 'global',
         ttl: 60,
         limit: 60,
+      },
+      {
+        name: 'auth',
+        ttl: 900,
+        limit: 10,
       },
     ]),
     DatabaseModule,
