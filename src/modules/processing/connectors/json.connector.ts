@@ -15,7 +15,9 @@ import {
 export class JsonConnector implements IDataConnector {
   private readonly logger = new Logger(JsonConnector.name);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) {
+    //
+  }
 
   supports(type: DataSourceType): boolean {
     return type === 'json';
@@ -28,6 +30,8 @@ export class JsonConnector implements IDataConnector {
     if (!config.endpoint) {
       throw new Error('JSON connector requires an endpoint');
     }
+
+    this.validateEndpoint(config.endpoint);
 
     this.logger.debug(`Fetching JSON from: ${config.endpoint}`);
 
@@ -66,6 +70,38 @@ export class JsonConnector implements IDataConnector {
     );
 
     return { data: paginatedData, total };
+  }
+
+  private validateEndpoint(endpoint: string): void {
+    let url: URL;
+    try {
+      url = new URL(endpoint);
+    } catch {
+      throw new Error(`Invalid endpoint URL: ${endpoint}`);
+    }
+
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+      throw new Error('Only http and https protocols are allowed');
+    }
+
+    const hostname = url.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/,
+      /^127\./,
+      /^0\.0\.0\.0$/,
+      /^192\.168\./,
+      /^10\./,
+      /^172\.(1[6-9]|2[0-9]|3[01])\./,
+      /^169\.254\./,
+      /^::1$/,
+      /^fc00:/,
+    ];
+
+    if (blockedPatterns.some((p) => p.test(hostname))) {
+      throw new Error(
+        'Requests to internal or private addresses are not allowed',
+      );
+    }
   }
 
   private buildHeaders(
