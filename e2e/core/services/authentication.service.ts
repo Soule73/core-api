@@ -3,10 +3,6 @@ import type { Server } from 'http';
 import request from 'supertest';
 import type { IAuthenticator } from '../interfaces';
 
-interface LoginResponse {
-  token: string;
-}
-
 /**
  * Service responsible for handling authentication operations.
  * Implements Single Responsibility Principle - only handles auth.
@@ -30,12 +26,25 @@ export class AuthenticationService implements IAuthenticator {
       );
     }
 
-    const body = response.body as LoginResponse;
-    if (!body.token) {
-      throw new Error(`No token returned for ${email}`);
+    // Extract JWT from the Set-Cookie header (httpOnly cookie migration)
+    const setCookieHeader = response.headers['set-cookie'] as
+      | string[]
+      | string
+      | undefined;
+    const cookies = Array.isArray(setCookieHeader)
+      ? setCookieHeader
+      : setCookieHeader
+        ? [setCookieHeader]
+        : [];
+
+    for (const cookie of cookies) {
+      const match = /access_token=([^;]+)/.exec(cookie);
+      if (match) {
+        return match[1];
+      }
     }
 
-    return body.token;
+    throw new Error(`No token returned for ${email}`);
   }
 
   async logout(app: INestApplication, token: string): Promise<void> {

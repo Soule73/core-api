@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -98,7 +98,7 @@ export class JsonConnector implements IDataConnector {
     ];
 
     if (blockedPatterns.some((p) => p.test(hostname))) {
-      throw new Error(
+      throw new BadRequestException(
         'Requests to internal or private addresses are not allowed',
       );
     }

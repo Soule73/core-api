@@ -28,6 +28,7 @@ import { SchemaAnalyzerService } from './schema-analyzer/schema-analyzer.service
 import { TypeDetector } from './schema-analyzer/detectors/type.detector';
 import { CardinalityDetector } from './schema-analyzer/detectors/cardinality.detector';
 import { SampleExtractor } from './schema-analyzer/detectors/sample.extractor';
+import { EncryptionService } from '../../common/services/encryption.service';
 
 import {
   DataSource,
@@ -88,6 +89,7 @@ import {
     TypeDetector,
     CardinalityDetector,
     SampleExtractor,
+    EncryptionService,
   ],
   exports: [
     DataFetcherService,

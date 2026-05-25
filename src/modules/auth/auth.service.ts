@@ -12,7 +12,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { Role, RoleDocument } from './schemas/role.schema';
 import { RegisterDto, LoginDto } from './dto';
 import {
-  AuthResponse,
+  AuthServiceResponse,
   JwtPayload,
   UserResponse,
   RoleResponse,
@@ -26,7 +26,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto): Promise<AuthResponse> {
+  async register(registerDto: RegisterDto): Promise<AuthServiceResponse> {
     const { username, email, password } = registerDto;
 
     const existingUser = await this.userModel.findOne({ email });
@@ -54,7 +54,7 @@ export class AuthService {
     return { user: userResponse, token };
   }
 
-  async login(loginDto: LoginDto): Promise<AuthResponse> {
+  async login(loginDto: LoginDto): Promise<AuthServiceResponse> {
     const { email, password } = loginDto;
 
     const user = await this.userModel.findOne({ email });

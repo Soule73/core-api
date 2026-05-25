@@ -6,6 +6,7 @@ import { DataSource, DataSourceSchema } from './schemas/datasource.schema';
 import { AuthModule } from '../auth/auth.module';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 import { WidgetsModule } from '../widgets/widgets.module';
+import { EncryptionService } from '../../common/services/encryption.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { WidgetsModule } from '../widgets/widgets.module';
     WidgetsModule,
   ],
   controllers: [DataSourcesController],
-  providers: [DataSourcesService],
+  providers: [DataSourcesService, EncryptionService],
   exports: [DataSourcesService],
 })
 export class DataSourcesModule {
