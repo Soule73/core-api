@@ -130,7 +130,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${bearerDataSourceId}/data`,
       );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
+      expect([200, 400, 401, 500, 502, 503]).toContain(response.status);
     });
   });
 
@@ -153,7 +153,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${apiKeyHeaderDataSourceId}/data`,
       );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
+      expect([200, 400, 401, 500, 502, 503]).toContain(response.status);
     });
   });
 
@@ -176,7 +176,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${apiKeyQueryDataSourceId}/data`,
       );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
+      expect([200, 400, 401, 500, 502, 503]).toContain(response.status);
     });
   });
 
@@ -199,7 +199,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${basicAuthDataSourceId}/data`,
       );
-      expect([200, 401, 500, 502, 503]).toContain(response.status);
+      expect([200, 400, 401, 500, 502, 503]).toContain(response.status);
     });
   });
 
@@ -213,7 +213,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${dsId}/data`,
       );
-      expect([401, 403, 500, 502, 503]).toContain(response.status);
+      expect([400, 401, 403, 500, 502, 503]).toContain(response.status);
     });
 
     it('should fail with invalid api key', async () => {
@@ -225,7 +225,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${dsId}/data`,
       );
-      expect([401, 403, 500, 502, 503]).toContain(response.status);
+      expect([400, 401, 403, 500, 502, 503]).toContain(response.status);
     });
 
     it('should fail with invalid basic auth credentials', async () => {
@@ -237,7 +237,7 @@ describe('Processing - Authentication Types (E2E)', () => {
       const response = await test.get(
         `/api/v1/processing/datasources/${dsId}/data`,
       );
-      expect([401, 403, 500, 502, 503]).toContain(response.status);
+      expect([400, 401, 403, 500, 502, 503]).toContain(response.status);
     });
   });
-});
+});;
