@@ -71,8 +71,15 @@ export class AuthController {
   @Throttle({ auth: { limit: 10, ttl: 900 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Authenticate user', description: 'Sets an httpOnly access_token cookie on success. No token is returned in the response body.' })
-  @ApiResponse({ status: 200, description: 'Successfully authenticated, access_token cookie set' })
+  @ApiOperation({
+    summary: 'Authenticate user',
+    description:
+      'Sets an httpOnly access_token cookie on success. No token is returned in the response body.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Successfully authenticated, access_token cookie set',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(
     @Body() loginDto: LoginDto,

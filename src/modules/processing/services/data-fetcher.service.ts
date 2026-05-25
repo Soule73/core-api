@@ -186,7 +186,8 @@ export class DataFetcherService {
       basic: ['password'],
     };
     const fields = fieldsToDecrypt[authType] ?? [];
-    const CIPHERTEXT_PATTERN = /^[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*$/;
+    const CIPHERTEXT_PATTERN =
+      /^[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*:[A-Za-z0-9+/]+=*$/;
     for (const field of fields) {
       if (typeof result[field] === 'string' && result[field].length > 0) {
         if (!CIPHERTEXT_PATTERN.test(result[field])) {

@@ -224,7 +224,9 @@ describe('DataFetcherService', () => {
 
       await service.fetchData({ dataSourceId: 'ds-1' });
 
-      expect(mockEncryptionService.decrypt).toHaveBeenCalledWith(encryptedToken);
+      expect(mockEncryptionService.decrypt).toHaveBeenCalledWith(
+        encryptedToken,
+      );
       const passedConfig = mockConnector.fetchData.mock.calls[0][0];
       expect(passedConfig.authConfig.token).toBe('plain-token');
     });
