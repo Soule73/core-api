@@ -15,22 +15,22 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, UpdatePreferencesDto } from './dto';
 import type { UserPreferencesResponse } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UserResponse } from '../../common/interfaces';
 import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('Users')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('users')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {
     /** */

@@ -105,7 +105,10 @@ describe('AuthController', () => {
   describe('logout', () => {
     it('should clear the session_id cookie', async () => {
       const mockReq = { cookies: { session_id: 'some-session-id' } };
-      await controller.logout(mockReq as unknown as Request, mockRes as Response);
+      await controller.logout(
+        mockReq as unknown as Request,
+        mockRes as Response,
+      );
 
       expect(mockRes.clearCookie).toHaveBeenCalledWith('session_id', {
         path: '/',

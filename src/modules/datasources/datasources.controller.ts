@@ -14,23 +14,25 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
 import { DataSourcesService } from './datasources.service';
 import { CreateDataSourceDto, UpdateDataSourceDto } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DataSourceResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('Data Sources')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('datasources')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class DataSourcesController {
-  constructor(private readonly dataSourcesService: DataSourcesService) {}
+  constructor(private readonly dataSourcesService: DataSourcesService) {
+    //
+  }
 
   @Post()
   @RequirePermissions('datasource:canCreate')

@@ -15,7 +15,7 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
@@ -25,16 +25,16 @@ import {
   UpdateAIConversationDto,
   AddMessageDto,
 } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AIConversationResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('AI Conversations')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('ai/conversations')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class AIConversationsController {
   constructor(
     private readonly aiConversationsService: AIConversationsService,

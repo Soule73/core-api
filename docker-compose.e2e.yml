@@ -9,8 +9,7 @@ services:
       - NODE_ENV=test
       - PORT=3000
       - MONGODB_URI=mongodb://mongo:27017/datavise_test
-      - JWT_SECRET=test-jwt-secret-for-e2e-testing
-      - JWT_EXPIRES_IN=1d
+      - SESSION_TTL_DAYS=1
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - ELASTICSEARCH_URL=http://elasticsearch:9200

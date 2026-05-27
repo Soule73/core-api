@@ -2,17 +2,13 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "CustomDash Core API",
-    "description": "Postman collection for the CustomDash Core API (NestJS). Includes automatic JWT token management.",
+    "description": "Postman collection for the CustomDash Core API (NestJS). Uses server-side session authentication via httpOnly cookie (session_id). Postman handles the session cookie automatically through its cookie jar.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
       "value": "http://localhost:3000/api/v1"
-    },
-    {
-      "key": "token",
-      "value": ""
     },
     {
       "key": "userId",
@@ -48,14 +44,7 @@
     }
   ],
   "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
+    "type": "noauth"
   },
   "item": [
     {
@@ -70,12 +59,12 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var response = pm.response.json();",
-                  "    pm.collectionVariables.set('token', response.token);",
                   "    if (response.user) {",
                   "        pm.collectionVariables.set('userId', response.user._id || response.user.id);",
                   "    }",
-                  "    pm.test('Registration successful', function() {",
-                  "        pm.expect(response).to.have.property('token');",
+                  "    pm.test('Registration successful - session cookie set', function() {",
+                  "        pm.expect(response).to.have.property('user');",
+                  "        pm.expect(pm.cookies.has('session_id')).to.be.true;",
                   "    });",
                   "}"
                 ],
@@ -115,12 +104,12 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var response = pm.response.json();",
-                  "    pm.collectionVariables.set('token', response.token);",
                   "    if (response.user) {",
                   "        pm.collectionVariables.set('userId', response.user._id || response.user.id);",
                   "    }",
-                  "    pm.test('Login successful', function() {",
-                  "        pm.expect(response).to.have.property('token');",
+                  "    pm.test('Login successful - session cookie set', function() {",
+                  "        pm.expect(response).to.have.property('user');",
+                  "        pm.expect(pm.cookies.has('session_id')).to.be.true;",
                   "    });",
                   "}"
                 ],
@@ -173,6 +162,33 @@
               "raw": "{{baseUrl}}/auth/profile",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Logout successful - session cookie cleared', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(pm.cookies.has('session_id')).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
             }
           },
           "response": []

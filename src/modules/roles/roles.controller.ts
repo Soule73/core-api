@@ -14,19 +14,19 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
 import { RolesService } from './roles.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { RoleResponse, PermissionResponse } from '../../common/interfaces';
 
 @ApiTags('Roles')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('roles')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 

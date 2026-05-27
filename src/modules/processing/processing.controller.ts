@@ -13,10 +13,10 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
 import {
   CurrentUser,
   type AuthUser,
@@ -25,8 +25,8 @@ import { DataFetcherService } from './services/data-fetcher.service';
 import { FetchDataDto, DetectColumnsDto } from './dto';
 
 @ApiTags('Processing')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@ApiCookieAuth('session_id')
+@UseGuards(SessionAuthGuard)
 @Controller('processing')
 export class ProcessingController {
   constructor(private readonly dataFetcherService: DataFetcherService) {

@@ -15,22 +15,22 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
 import { WidgetsService } from './widgets.service';
 import { CreateWidgetDto, UpdateWidgetDto } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { WidgetResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('Widgets')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('widgets')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class WidgetsController {
   constructor(private readonly widgetsService: WidgetsService) {}
 

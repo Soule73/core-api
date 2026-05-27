@@ -36,15 +36,12 @@ async function bootstrap() {
       'Main API for managing dashboards, widgets, data sources and authentication',
     )
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        description: 'JWT token obtained via /api/v1/auth/login',
-      },
-      'JWT-auth',
-    )
+    .addCookieAuth('session_id', {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'session_id',
+      description: 'Session cookie obtained via /api/v1/auth/login',
+    })
     .addTag('Health', 'Health check endpoints')
     .addTag('Auth', 'Authentication and user management')
     .addTag('Users', 'User management (admin)')

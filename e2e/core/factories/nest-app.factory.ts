@@ -89,14 +89,11 @@ export class NestAppFactory implements IAppFactory {
       .setTitle('CustomDash Core API')
       .setDescription('E2E Test API')
       .setVersion('1.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-        },
-        'JWT-auth',
-      )
+      .addCookieAuth('session_id', {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'session_id',
+      })
       .build();
 
     const document = SwaggerModule.createDocument(app, config);

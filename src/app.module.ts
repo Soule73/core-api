@@ -14,14 +14,14 @@ import { DataSourcesModule } from './modules/datasources';
 import { AIConversationsModule } from './modules/ai-conversations';
 import { ProcessingModule } from './modules/processing';
 import { AIModule } from './modules/ai';
-import { databaseConfig, jwtConfig, redisConfig, appConfig } from './config';
+import { databaseConfig, redisConfig, appConfig } from './config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [databaseConfig, jwtConfig, redisConfig, appConfig],
+      load: [databaseConfig, redisConfig, appConfig],
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],

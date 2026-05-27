@@ -37,7 +37,6 @@
     "@nestjs/common": "^11.1.19",
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.1.19",
-    "@nestjs/jwt": "^11.0.2",
     "@nestjs/mongoose": "^11.0.4",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.19",
@@ -59,7 +58,6 @@
     "openai": "^4.103.0",
     "passport": "^0.7.0",
     "passport-custom": "^1.1.1",
-    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -76,7 +74,6 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
-    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.3",
     "@vitest/ui": "^4.1.4",
     "commitizen": "^4.3.1",

@@ -15,12 +15,12 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiBearerAuth,
+  ApiCookieAuth,
   ApiParam,
 } from '@nestjs/swagger';
 import { DashboardsService } from './dashboards.service';
 import { CreateDashboardDto, UpdateDashboardDto } from './dto';
-import { JwtAuthGuard, PermissionsGuard } from '../auth/guards';
+import { SessionAuthGuard, PermissionsGuard } from '../auth/guards';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -28,11 +28,13 @@ import { DashboardResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
 
 @ApiTags('Dashboards')
-@ApiBearerAuth('JWT-auth')
+@ApiCookieAuth('session_id')
 @Controller('dashboards')
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(SessionAuthGuard, PermissionsGuard)
 export class DashboardsController {
-  constructor(private readonly dashboardsService: DashboardsService) {}
+  constructor(private readonly dashboardsService: DashboardsService) {
+    //
+  }
 
   @Post()
   @RequirePermissions('dashboard:canCreate')

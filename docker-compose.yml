@@ -72,8 +72,7 @@ services:
   #     NODE_ENV: development
   #     PORT: 3000
   #     MONGODB_URI: mongodb://admin:password@mongodb:27017/customdash?authSource=admin
-  #     JWT_SECRET: your-super-secret-jwt-key-change-in-production-8x7fk2m9p
-  #     JWT_EXPIRES_IN: 24h
+  #     SESSION_TTL_DAYS: 7
   #     OPENAI_API_KEY: ${OPENAI_API_KEY:-}
   #     AI_MODEL: gpt-4o-mini
   #     CORS_ORIGINS: http://localhost:5173,http://frontend:5173

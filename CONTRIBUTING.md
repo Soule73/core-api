@@ -53,7 +53,6 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/).
 ### Examples
 
 ```bash
-feat(auth): add JWT refresh token
 fix(users): resolve email validation bug
 docs(readme): update installation steps
 test(widgets): add unit tests for widget service
