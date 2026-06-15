@@ -6,6 +6,7 @@ import {
   IsMongoId,
   Matches,
   ValidateNested,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -89,4 +90,13 @@ export class UpdateUserDto {
   @ValidateNested()
   @Type(() => UserPreferencesDto)
   preferences?: UserPreferencesDto;
+
+  @ApiProperty({
+    description: 'Whether the user account is active',
+    example: true,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

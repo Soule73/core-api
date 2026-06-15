@@ -126,6 +126,8 @@ export class RolesService {
         name: p.name,
         description: p.description,
       })),
+      createdAt: (role as unknown as { createdAt?: Date }).createdAt,
+      updatedAt: (role as unknown as { updatedAt?: Date }).updatedAt,
     };
   }
 }

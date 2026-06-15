@@ -20,6 +20,7 @@ export interface UserResponse {
   username: string;
   email: string;
   role: RoleResponse | null;
+  isActive: boolean;
   preferences?: { theme?: string; language?: string };
   createdAt?: Date;
   updatedAt?: Date;

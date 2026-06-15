@@ -145,7 +145,7 @@ export class AIService {
     const openAiTitle =
       typeof rawResponse.conversationTitle === 'string'
         ? rawResponse.conversationTitle
-        : `AI generation — ${dataSource.name}`;
+        : `AI generation - ${dataSource.name}`;
 
     const conversationTitle = isFirstTurn ? openAiTitle : conversation.title;
 
@@ -206,7 +206,7 @@ export class AIService {
 
     return this.aiConversationsService.create(userId, {
       dataSourceId: dto.dataSourceId,
-      title: `AI generation — ${dataSourceName}`,
+      title: `AI generation - ${dataSourceName}`,
     });
   }
 

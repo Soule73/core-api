@@ -194,7 +194,7 @@ describe('DataFetcherService', () => {
     });
   });
 
-  describe('fetchData — authConfig decryption', () => {
+  describe('fetchData - authConfig decryption', () => {
     const BASE_64_SEGMENT = '[A-Za-z0-9+/]+=*';
     const CIPHERTEXT_PATTERN = new RegExp(
       `^${BASE_64_SEGMENT}:${BASE_64_SEGMENT}:${BASE_64_SEGMENT}$`,
