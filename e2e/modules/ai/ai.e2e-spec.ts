@@ -121,7 +121,7 @@ describe('AI Generate Widget (E2E)', () => {
     vi.restoreAllMocks();
   });
 
-  describe('POST /api/v1/ai/generate-widget — input validation', () => {
+  describe('POST /api/v1/ai/generate-widget - input validation', () => {
     it('should return 401 without authentication', async () => {
       const response = await test.generateWidgetWithoutAuth({
         dataSourceId: test.getUserDataSourceId(),
@@ -182,7 +182,7 @@ describe('AI Generate Widget (E2E)', () => {
     });
   });
 
-  describe('POST /api/v1/ai/generate-widget — service unavailable', () => {
+  describe('POST /api/v1/ai/generate-widget - service unavailable', () => {
     it('should return 503 when OpenAI API key is not configured', async () => {
       vi.spyOn(test.getAIService(), 'generateWidget').mockRejectedValueOnce(
         new ServiceUnavailableException(
@@ -199,7 +199,7 @@ describe('AI Generate Widget (E2E)', () => {
     });
   });
 
-  describe('POST /api/v1/ai/generate-widget — successful generation', () => {
+  describe('POST /api/v1/ai/generate-widget - successful generation', () => {
     it('should return 201 with AI-generated widgets array as drafts', async () => {
       const userId = test.testData.regularUser._id;
       const mockResult = buildMockAIResult(test.getUserDataSourceId(), userId);
@@ -304,7 +304,7 @@ describe('AI Generate Widget (E2E)', () => {
     });
   });
 
-  describe('POST /api/v1/ai/generate-widget — data source access control', () => {
+  describe('POST /api/v1/ai/generate-widget - data source access control', () => {
     it('should return 404 when data source does not exist', async () => {
       vi.spyOn(test.getAIService(), 'generateWidget').mockRejectedValueOnce(
         new (await import('@nestjs/common')).NotFoundException(

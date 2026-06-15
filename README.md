@@ -7,7 +7,7 @@ NestJS REST API for the CustomDash platform - Modular 2-tier architecture with i
 - **Framework**: NestJS 11.x
 - **Language**: TypeScript 5.7
 - **Database**: MongoDB with Mongoose
-- **Authentication**: JWT with Passport
+- **Authentication**: Session based
 - **Validation**: class-validator & class-transformer
 - **Testing**: Vitest (unit & E2E)
 - **Data Sources**: JSON, CSV, Elasticsearch
@@ -24,8 +24,7 @@ cp .env.example .env
 ```env
 MONGODB_URI=mongodb://localhost:27017
 MONGODB_NAME=customdash
-JWT_SECRET=your-super-secret-key
-JWT_EXPIRATION=7d
+SESSION_TTL_DAYS=7
 PORT=3000
 NODE_ENV=development
 CORS_ORIGINS=http://localhost:5173
@@ -53,10 +52,10 @@ yarn release        # New version
 ```
 src/
 ├── common/           # Decorators, filters, guards, interceptors
-├── config/           # Configuration (database, jwt, redis)
+├── config/           # Configuration (database, redis)
 ├── database/         # Seeder and DB module
 └── modules/
-    ├── auth/         # JWT Authentication
+    ├── auth/         # Authentication & authorization
     ├── users/        # User management
     ├── roles/        # Roles and permissions management
     ├── dashboards/   # Dashboards CRUD

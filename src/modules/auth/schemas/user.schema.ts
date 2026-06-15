@@ -21,6 +21,9 @@ export class User {
   @Prop({ type: Object, default: {} })
   preferences: Record<string, unknown>;
 
+  @Prop({ default: true })
+  isActive: boolean;
+
   @Prop()
   passwordChangedAt?: Date;
 }

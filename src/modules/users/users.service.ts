@@ -117,6 +117,8 @@ export class UsersService {
     if (updateUserDto.roleId) updateData.roleId = updateUserDto.roleId;
     if (updateUserDto.preferences)
       updateData.preferences = updateUserDto.preferences;
+    if (updateUserDto.isActive !== undefined)
+      updateData.isActive = updateUserDto.isActive;
 
     if (updateUserDto.password) {
       updateData.password = await bcrypt.hash(updateUserDto.password, 10);
@@ -231,7 +233,10 @@ export class UsersService {
       username: user.username,
       email: user.email,
       role: roleResponse,
+      isActive: user.isActive ?? true,
       preferences: user.preferences as { theme?: string; language?: string },
+      createdAt: (user as unknown as { createdAt?: Date }).createdAt,
+      updatedAt: (user as unknown as { updatedAt?: Date }).updatedAt,
     };
   }
 }

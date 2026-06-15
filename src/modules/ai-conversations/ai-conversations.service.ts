@@ -147,7 +147,7 @@ export class AIConversationsService {
   /**
    * Upserts widget summaries in the conversation's generatedWidgets array.
    * Existing entries with the same widgetId are replaced to avoid duplicates.
-   * Ownership is enforced atomically — throws NotFoundException if the conversation
+   * Ownership is enforced atomically - throws NotFoundException if the conversation
    * does not exist or is not owned by the user.
    *
    * @param id - Conversation ID
