@@ -1,4 +1,5 @@
 import type { FilterOperator } from '../../processing/filters';
+import type { WidgetResponse } from '../../widgets/interfaces/widget.interface';
 
 export interface LayoutItemStylesResponse {
   backgroundColor?: string;
@@ -69,4 +70,5 @@ export interface DashboardResponse {
   globalFilters: DashboardFilterResponse[];
   createdAt?: Date;
   updatedAt?: Date;
+  widgets?: WidgetResponse[];
 }

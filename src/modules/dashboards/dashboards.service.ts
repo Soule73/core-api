@@ -9,6 +9,7 @@ import { Dashboard, DashboardDocument } from './schemas/dashboard.schema';
 import { CreateDashboardDto, UpdateDashboardDto } from './dto';
 import { DashboardResponse } from './interfaces';
 import { WidgetsService } from '../widgets/widgets.service';
+import { DataFetcherService } from '../processing/services/data-fetcher.service';
 
 @Injectable()
 export class DashboardsService {
@@ -16,6 +17,7 @@ export class DashboardsService {
     @InjectModel(Dashboard.name)
     private dashboardModel: Model<DashboardDocument>,
     private readonly widgetsService: WidgetsService,
+    private readonly dataFetcherService: DataFetcherService,
   ) {
     /** */
   }
@@ -124,7 +126,33 @@ export class DashboardsService {
       throw new NotFoundException('Shared dashboard not found');
     }
 
-    return this.buildDashboardResponse(dashboard);
+    const dashboardResponse = this.buildDashboardResponse(dashboard);
+    const widgetIds = dashboardResponse.layout.map((item) => item.widgetId);
+    const widgets = await this.widgetsService.findPublicByIds(widgetIds);
+
+    const widgetsWithData = await Promise.all(
+      widgets.map(async (widget) => {
+        try {
+          const data = await this.dataFetcherService.fetchRawData(
+            widget.dataSourceId,
+          );
+          return {
+            ...widget,
+            data,
+          };
+        } catch {
+          return {
+            ...widget,
+            data: [],
+          };
+        }
+      }),
+    );
+
+    return {
+      ...dashboardResponse,
+      widgets: widgetsWithData,
+    };
   }
 
   async update(

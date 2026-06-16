@@ -16,4 +16,5 @@ export interface WidgetResponse {
   createdAt?: Date;
   updatedAt?: Date;
   replacesWidgetId?: string;
+  data?: Record<string, unknown>[];
 }
