@@ -18,6 +18,7 @@ import { AppController } from '@core/app.controller';
 import { AppService } from '@core/app.service';
 import type { IAppFactory } from '../interfaces';
 import * as path from 'path';
+import cookieParser from 'cookie-parser';
 
 /**
  * Factory class responsible for creating and destroying NestJS test applications.
@@ -75,6 +76,8 @@ export class NestAppFactory implements IAppFactory {
   }
 
   private configureApp(app: INestApplication): void {
+    app.use(cookieParser());
+
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,

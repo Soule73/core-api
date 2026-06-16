@@ -19,7 +19,8 @@ interface UploadedCsvFile {
   originalname: string;
   mimetype: string;
   size: number;
-  buffer: Buffer;
+  buffer?: Buffer;
+  path?: string;
 }
 
 @Injectable()
@@ -45,7 +46,11 @@ export class DataSourcesService {
       throw new BadRequestException('CSV file is required');
     }
 
-    const validMimeTypes = ['text/csv', 'application/vnd.ms-excel', 'text/plain'];
+    const validMimeTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'text/plain',
+    ];
     const isCsvByMime = validMimeTypes.includes(file.mimetype);
     const isCsvByName = file.originalname.toLowerCase().endsWith('.csv');
     if (!isCsvByMime && !isCsvByName) {
@@ -56,6 +61,13 @@ export class DataSourcesService {
       throw new BadRequestException('File size exceeds 10MB limit');
     }
 
+    const buffer =
+      file.buffer ?? (file.path ? await fs.readFile(file.path) : undefined);
+
+    if (!buffer) {
+      throw new BadRequestException('CSV file content is missing');
+    }
+
     const sanitizedName = this.sanitizeFileName(file.originalname);
     const objectKey = `csv/${userId}/${Date.now()}-${sanitizedName}`;
 
@@ -63,15 +75,17 @@ export class DataSourcesService {
     let storageType: 'local' | 'r2' = 'local';
 
     if (this.r2StorageService.isConfigured) {
-      await this.r2StorageService.upload(objectKey, file.buffer, 'text/csv');
+      await this.r2StorageService.upload(objectKey, buffer, 'text/csv');
       storageType = 'r2';
     } else {
       const uploadsDir = path.resolve(process.cwd(), 'uploads');
       const absolutePath = path.resolve(uploadsDir, objectKey);
       await fs.mkdir(path.dirname(absolutePath), { recursive: true });
-      await fs.writeFile(absolutePath, file.buffer);
+      await fs.writeFile(absolutePath, buffer);
       filePath = objectKey;
-      this.logger.warn('R2 not configured, CSV stored locally in uploads directory');
+      this.logger.warn(
+        'R2 not configured, CSV stored locally in uploads directory',
+      );
     }
 
     const dataSource = await this.dataSourceModel.create({

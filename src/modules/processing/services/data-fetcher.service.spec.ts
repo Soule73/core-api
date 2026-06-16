@@ -227,7 +227,11 @@ describe('DataFetcherService', () => {
       expect(mockEncryptionService.decrypt).toHaveBeenCalledWith(
         encryptedToken,
       );
-      const passedConfig = mockConnector.fetchData.mock.calls[0][0];
+      const passedConfig = mockConnector.fetchData.mock.calls[0][0] as {
+        authConfig: {
+          token?: string;
+        };
+      };
       expect(passedConfig.authConfig.token).toBe('plain-token');
     });
 
@@ -257,7 +261,11 @@ describe('DataFetcherService', () => {
 
       // Non-ciphertext values must not be passed to decrypt
       expect(mockEncryptionService.decrypt).not.toHaveBeenCalled();
-      const passedConfig = mockConnector.fetchData.mock.calls[0][0];
+      const passedConfig = mockConnector.fetchData.mock.calls[0][0] as {
+        authConfig: {
+          password?: string;
+        };
+      };
       expect(passedConfig.authConfig.password).toBe(plaintextPassword);
     });
 

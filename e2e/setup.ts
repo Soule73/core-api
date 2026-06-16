@@ -7,6 +7,11 @@ if (!process.env.ENCRYPTION_KEY) {
     '0000000000000000000000000000000000000000000000000000000000000000';
 }
 
+process.env.R2_ACCOUNT_ID = '';
+process.env.R2_ACCESS_KEY_ID = '';
+process.env.R2_SECRET_ACCESS_KEY = '';
+process.env.R2_BUCKET_NAME = '';
+
 /**
  * Global E2E test setup file.
  * Initializes the TestContext singleton before all tests

@@ -5,6 +5,7 @@ import { NotFoundException } from '@nestjs/common';
 import { DashboardsService } from './dashboards.service';
 import { Dashboard } from './schemas/dashboard.schema';
 import { WidgetsService } from '../widgets/widgets.service';
+import { DataFetcherService } from '../processing/services/data-fetcher.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -37,6 +38,11 @@ const mockDashboardModel = {
 const mockWidgetsService = {
   findOne: vi.fn(),
   findByDataSource: vi.fn(),
+  findPublicByIds: vi.fn(),
+};
+
+const mockDataFetcherService = {
+  fetchRawData: vi.fn().mockResolvedValue([]),
 };
 
 describe('DashboardsService', () => {
@@ -55,6 +61,10 @@ describe('DashboardsService', () => {
         {
           provide: WidgetsService,
           useValue: mockWidgetsService,
+        },
+        {
+          provide: DataFetcherService,
+          useValue: mockDataFetcherService,
         },
       ],
     }).compile();
@@ -180,6 +190,7 @@ describe('DashboardsService', () => {
         shareId: mockShareId,
       };
       mockDashboardModel.findOne.mockResolvedValue(sharedDashboard);
+      mockWidgetsService.findPublicByIds.mockResolvedValue([]);
 
       const result = await service.findByShareId(mockShareId);
 

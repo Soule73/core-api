@@ -283,10 +283,12 @@ describe('AIConversationsService', () => {
         mockWidgetSummaries,
       );
 
-      const firstCallUpdate = mockConversationModel.updateOne.mock.calls[0][1];
+      const firstCallUpdate = mockConversationModel.updateOne.mock
+        .calls[0][1] as Record<string, unknown>;
       expect(firstCallUpdate).toHaveProperty('$pull');
 
-      const secondCallUpdate = mockConversationModel.updateOne.mock.calls[1][1];
+      const secondCallUpdate = mockConversationModel.updateOne.mock
+        .calls[1][1] as Record<string, unknown>;
       expect(secondCallUpdate).toHaveProperty('$push');
     });
 
