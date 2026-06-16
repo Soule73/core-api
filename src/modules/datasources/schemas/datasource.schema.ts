@@ -21,6 +21,9 @@ export class DataSource {
   @Prop()
   filePath?: string;
 
+  @Prop({ enum: ['local', 'r2'], default: 'local' })
+  storageType?: string;
+
   @Prop({ type: Object, default: {} })
   config!: Record<string, unknown>;
 

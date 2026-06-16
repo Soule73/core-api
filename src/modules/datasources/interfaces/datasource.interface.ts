@@ -5,6 +5,7 @@ export interface DataSourceResponse {
   type: string;
   endpoint?: string;
   filePath?: string;
+  storageType?: string;
   config: Record<string, unknown>;
   ownerId: string;
   visibility: string;

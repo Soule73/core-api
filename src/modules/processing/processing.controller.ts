@@ -67,6 +67,7 @@ export class ProcessingController {
       type: config.type,
       endpoint: config.endpoint,
       filePath: config.filePath,
+      storageType: config.storageType,
       httpMethod: config.httpMethod,
       authType: config.authType,
       authConfig: config.authConfig,

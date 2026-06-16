@@ -166,6 +166,7 @@ export class DataFetcherService {
       type: dataSource.type as DataSourceConfig['type'],
       endpoint: dataSource.endpoint as string | undefined,
       filePath: dataSource.filePath as string | undefined,
+      storageType: dataSource.storageType as DataSourceConfig['storageType'],
       httpMethod: dataSource.httpMethod as DataSourceConfig['httpMethod'],
       authType: authType as DataSourceConfig['authType'],
       authConfig,

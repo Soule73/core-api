@@ -7,6 +7,7 @@ import { AuthModule } from '../auth/auth.module';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 import { WidgetsModule } from '../widgets/widgets.module';
 import { EncryptionService } from '../../common/services/encryption.service';
+import { R2StorageService } from '../../common/services/r2-storage.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { EncryptionService } from '../../common/services/encryption.service';
     WidgetsModule,
   ],
   controllers: [DataSourcesController],
-  providers: [DataSourcesService, EncryptionService],
+  providers: [DataSourcesService, EncryptionService, R2StorageService],
   exports: [DataSourcesService],
 })
 export class DataSourcesModule {

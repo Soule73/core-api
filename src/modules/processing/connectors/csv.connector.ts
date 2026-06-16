@@ -5,6 +5,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import csvParser from 'csv-parser';
 import { Readable } from 'stream';
+import { R2StorageService } from '../../../common/services/r2-storage.service';
 import {
   IDataConnector,
   DataSourceConfig,
@@ -19,7 +20,10 @@ import {
 export class CsvConnector implements IDataConnector {
   private readonly logger = new Logger(CsvConnector.name);
 
-  constructor(private readonly httpService: HttpService) {
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly r2StorageService: R2StorageService,
+  ) {
     /** */
   }
 
@@ -35,7 +39,7 @@ export class CsvConnector implements IDataConnector {
 
     if (config.filePath) {
       this.logger.debug(`Reading CSV from file: ${config.filePath}`);
-      data = await this.readCsvFile(config.filePath);
+      data = await this.readCsvFile(config.filePath, config.storageType);
     } else if (config.endpoint) {
       this.logger.debug(`Fetching CSV from: ${config.endpoint}`);
       data = await this.fetchRemoteCsv(config);
@@ -64,7 +68,17 @@ export class CsvConnector implements IDataConnector {
 
   private async readCsvFile(
     filePath: string,
+    storageType?: 'local' | 'r2',
   ): Promise<Record<string, unknown>[]> {
+    if (storageType === 'r2') {
+      if (!this.r2StorageService.isConfigured) {
+        throw new Error('R2 storage is not configured');
+      }
+
+      const buffer = await this.r2StorageService.download(filePath);
+      return this.parseCsvString(buffer.toString('utf-8'));
+    }
+
     const uploadsDir = path.resolve(process.cwd(), 'uploads');
     const absolutePath = path.resolve(uploadsDir, filePath);
 

@@ -7,15 +7,20 @@ import {
   Body,
   Param,
   UseGuards,
+  UploadedFile,
+  UseInterceptors,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiCookieAuth,
   ApiParam,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { DataSourcesService } from './datasources.service';
 import { CreateDataSourceDto, UpdateDataSourceDto } from './dto';
@@ -24,6 +29,13 @@ import { RequirePermissions } from '../../common/decorators/permissions.decorato
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DataSourceResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
+
+interface UploadedCsvFile {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
+}
 
 @ApiTags('Data Sources')
 @ApiCookieAuth('session_id')
@@ -52,6 +64,26 @@ export class DataSourcesController {
   @ApiResponse({ status: 200, description: 'List of data sources' })
   async findAll(@CurrentUser() user: AuthUser): Promise<DataSourceResponse[]> {
     return this.dataSourcesService.findAll(user.id);
+  }
+
+  @Post('upload')
+  @RequirePermissions('datasource:canCreate')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload CSV and create a data source' })
+  @ApiResponse({ status: 201, description: 'CSV uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid CSV file' })
+  async uploadCsv(
+    @CurrentUser() user: AuthUser,
+    @UploadedFile() file: UploadedCsvFile,
+    @Body('name') name?: string,
+  ): Promise<DataSourceResponse> {
+    return this.dataSourcesService.createFromCsvUpload(user.id, file, name);
   }
 
   @Get(':id')
