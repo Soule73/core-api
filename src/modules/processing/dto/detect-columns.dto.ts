@@ -40,6 +40,14 @@ export class DetectColumnsDto {
   @IsOptional()
   authConfig?: Record<string, unknown>;
 
+  @ApiPropertyOptional({
+    enum: ['local', 'r2'],
+    description: 'Storage type for CSV data sources',
+  })
+  @IsOptional()
+  @IsEnum(['local', 'r2'] as const)
+  storageType?: 'local' | 'r2';
+
   @ApiPropertyOptional({ description: 'Elasticsearch index name' })
   @IsOptional()
   @IsString()
