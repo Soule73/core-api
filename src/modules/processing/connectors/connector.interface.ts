@@ -14,6 +14,7 @@ export interface DataSourceConfig {
   type: DataSourceType;
   endpoint?: string;
   filePath?: string;
+  storageType?: 'local' | 'r2';
   httpMethod?: HttpMethod;
   authType?: AuthType;
   authConfig?: AuthConfig;

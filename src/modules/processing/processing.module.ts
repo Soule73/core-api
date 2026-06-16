@@ -29,6 +29,7 @@ import { TypeDetector } from './schema-analyzer/detectors/type.detector';
 import { CardinalityDetector } from './schema-analyzer/detectors/cardinality.detector';
 import { SampleExtractor } from './schema-analyzer/detectors/sample.extractor';
 import { EncryptionService } from '../../common/services/encryption.service';
+import { R2StorageService } from '../../common/services/r2-storage.service';
 
 import {
   DataSource,
@@ -90,6 +91,7 @@ import {
     CardinalityDetector,
     SampleExtractor,
     EncryptionService,
+    R2StorageService,
   ],
   exports: [
     DataFetcherService,
