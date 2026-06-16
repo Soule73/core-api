@@ -6,6 +6,7 @@ import { DataSourcesService } from './datasources.service';
 import { DataSource } from './schemas/datasource.schema';
 import { WidgetsService } from '../widgets/widgets.service';
 import { EncryptionService } from '../../common/services/encryption.service';
+import { R2StorageService } from '../../common/services/r2-storage.service';
 import { Types } from 'mongoose';
 
 const mockUserId = '507f1f77bcf86cd799439011';
@@ -35,6 +36,13 @@ const mockWidgetsService = {
   findByDataSource: vi.fn(),
 };
 
+const mockR2StorageService = {
+  isConfigured: false,
+  upload: vi.fn(),
+  download: vi.fn(),
+  delete: vi.fn(),
+};
+
 describe('DataSourcesService', () => {
   let service: DataSourcesService;
 
@@ -58,6 +66,10 @@ describe('DataSourcesService', () => {
             encrypt: vi.fn((v: string) => `enc:${v}`),
             decrypt: vi.fn((v: string) => v.replace('enc:', '')),
           },
+        },
+        {
+          provide: R2StorageService,
+          useValue: mockR2StorageService,
         },
       ],
     }).compile();

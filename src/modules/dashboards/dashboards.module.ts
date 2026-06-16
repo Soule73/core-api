@@ -6,6 +6,7 @@ import { Dashboard, DashboardSchema } from './schemas/dashboard.schema';
 import { AuthModule } from '../auth/auth.module';
 import { User, UserSchema } from '../auth/schemas/user.schema';
 import { WidgetsModule } from '../widgets/widgets.module';
+import { ProcessingModule } from '../processing/processing.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { WidgetsModule } from '../widgets/widgets.module';
     ]),
     AuthModule,
     WidgetsModule,
+    ProcessingModule,
   ],
   controllers: [DashboardsController],
   providers: [DashboardsService],

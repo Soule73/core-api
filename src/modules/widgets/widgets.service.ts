@@ -53,6 +53,27 @@ export class WidgetsService {
     return widgets.map((w) => this.buildWidgetResponse(w));
   }
 
+  async findPublicByIds(widgetIds: string[]): Promise<WidgetResponse[]> {
+    if (widgetIds.length === 0) {
+      return [];
+    }
+
+    const widgets = await this.widgetModel.find({
+      _id: { $in: widgetIds.map((widgetId) => new Types.ObjectId(widgetId)) },
+    });
+
+    const widgetMap = new Map(
+      widgets.map((widget) => [
+        widget._id.toString(),
+        this.buildWidgetResponse(widget),
+      ]),
+    );
+
+    return widgetIds
+      .map((widgetId) => widgetMap.get(widgetId))
+      .filter((widget): widget is WidgetResponse => Boolean(widget));
+  }
+
   async findByDataSource(
     dataSourceId: string,
     userId: string,

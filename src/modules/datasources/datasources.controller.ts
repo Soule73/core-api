@@ -13,7 +13,14 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+
+interface UploadedCsvFile {
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer?: Buffer;
+  path?: string;
+}
 import {
   ApiTags,
   ApiOperation,
@@ -29,13 +36,6 @@ import { RequirePermissions } from '../../common/decorators/permissions.decorato
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { DataSourceResponse } from './interfaces';
 import type { AuthUser } from '../auth/interfaces';
-
-interface UploadedCsvFile {
-  originalname: string;
-  mimetype: string;
-  size: number;
-  buffer: Buffer;
-}
 
 @ApiTags('Data Sources')
 @ApiCookieAuth('session_id')
@@ -70,7 +70,6 @@ export class DataSourcesController {
   @RequirePermissions('datasource:canCreate')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )

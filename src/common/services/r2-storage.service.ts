@@ -19,15 +19,24 @@ export class R2StorageService {
   constructor(private readonly configService: ConfigService) {
     this.accountId = this.configService.get<string>('R2_ACCOUNT_ID');
     this.accessKeyId = this.configService.get<string>('R2_ACCESS_KEY_ID');
-    this.secretAccessKey = this.configService.get<string>('R2_SECRET_ACCESS_KEY');
-    this.bucketName = this.configService.get<string>('R2_BUCKET_NAME', 'customdash-uploads');
+    this.secretAccessKey = this.configService.get<string>(
+      'R2_SECRET_ACCESS_KEY',
+    );
+    this.bucketName = this.configService.get<string>(
+      'R2_BUCKET_NAME',
+      'customdash-uploads',
+    );
   }
 
   get isConfigured(): boolean {
     return Boolean(this.accountId && this.accessKeyId && this.secretAccessKey);
   }
 
-  async upload(key: string, buffer: Buffer, contentType: string): Promise<string> {
+  async upload(
+    key: string,
+    buffer: Buffer,
+    contentType: string,
+  ): Promise<string> {
     const client = this.getClient();
     await client.send(
       new PutObjectCommand({
@@ -58,7 +67,13 @@ export class R2StorageService {
     if (body instanceof Readable) {
       const chunks: Buffer[] = [];
       for await (const chunk of body) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        if (Buffer.isBuffer(chunk)) {
+          chunks.push(chunk);
+        } else if (typeof chunk === 'string') {
+          chunks.push(Buffer.from(chunk));
+        } else {
+          chunks.push(Buffer.from(chunk as Uint8Array<ArrayBufferLike>));
+        }
       }
       return Buffer.concat(chunks);
     }
